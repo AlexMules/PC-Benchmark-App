@@ -302,7 +302,6 @@ void getRAMInfo() {
 	ULONG uReturn = 0;
 	int moduleIndex = 0;
 	long long totalCapacityBytes = 0;
-	double totalBandwidth = 0;
 	std::set<wstring> channelSet;
 
 	cout << fixed << setprecision(1);
@@ -332,10 +331,6 @@ void getRAMInfo() {
 		unsigned int busClock = clk / 2;
 		cout << "Bus Clock: " << busClock << " MHz\n";
 		cout << "Data Transfer Rate: " << clk << " MT/s\n";
-
-		double moduleBW = clk * 8 / 1000.0; // GB/s per modul
-		totalBandwidth += moduleBW;
-		cout << "Module Bandwidth: " << moduleBW << " GB/s\n";
 		VariantClear(&vt);
 
 		// Device Locator
@@ -416,7 +411,6 @@ void getRAMInfo() {
 	}
 	pEnumerator->Release();
 
-	// Total slots
 	pEnumerator = nullptr;
 	int totalSlots = 0;
 	VARIANT vt;
@@ -439,7 +433,6 @@ void getRAMInfo() {
 	double totalGB = totalCapacityBytes / 1024.0 / 1024.0 / 1024.0;
 	cout << "Total RAM Installed: " << totalGB << " GB\n";
 
-	// Channel configuration mai elegant
 	cout << "Channel Configuration: ";
 	switch (channelSet.size()) {
 	case 1: cout << "Single-channel\n"; break;
@@ -447,12 +440,6 @@ void getRAMInfo() {
 	case 3: cout << "Triple-channel\n"; break;
 	case 4: cout << "Quad-channel\n"; break;
 	default: cout << channelSet.size() << " channels\n"; break;
-	}
-
-	// Total System Bandwidth
-	if (!channelSet.empty() && moduleIndex > 0) {
-		double systemBW = (totalBandwidth / moduleIndex) * channelSet.size();
-		cout << "Total Memory Bandwidth: " << systemBW << " GB/s\n";
 	}
 
 	pSvc->Release();
