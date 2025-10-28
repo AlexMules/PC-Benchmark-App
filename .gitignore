@@ -13,6 +13,7 @@ obj/
 *.lib
 *.pdb
 *.log
+.vs/
 .vscode/
 
 # OS-specific
