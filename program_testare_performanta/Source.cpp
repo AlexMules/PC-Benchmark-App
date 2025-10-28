@@ -328,8 +328,6 @@ void getRAMInfo() {
 		// Speed
 		pclsObj->Get(L"ConfiguredClockSpeed", 0, &vt, 0, 0);
 		unsigned int clk = (vt.vt != VT_EMPTY ? vt.uintVal : 0);
-		unsigned int busClock = clk / 2;
-		cout << "Bus Clock: " << busClock << " MHz\n";
 		cout << "Data Transfer Rate: " << clk << " MT/s\n";
 		VariantClear(&vt);
 
