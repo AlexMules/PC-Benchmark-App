@@ -342,7 +342,7 @@ void getRAMInfo() {
 		wcout << L"Bank Label: " << bankLabel << L"\n";
 		VariantClear(&vt);
 
-		// Extragem canalul din BankLabel
+		// Channel
 		size_t pos = bankLabel.find(L"CHANNEL ");
 		if (pos != wstring::npos && bankLabel.size() > pos + 8) {
 			wchar_t ch = bankLabel[pos + 8];
@@ -431,6 +431,7 @@ void getRAMInfo() {
 	double totalGB = totalCapacityBytes / 1024.0 / 1024.0 / 1024.0;
 	cout << "Total RAM Installed: " << totalGB << " GB\n";
 
+	// Channel Configuration
 	cout << "Channel Configuration: ";
 	switch (channelSet.size()) {
 	case 1: cout << "Single-channel\n"; break;
