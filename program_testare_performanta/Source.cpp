@@ -172,11 +172,11 @@ void get_CPU_info()
 	// ECX bits (modern)
 	if (IA_extension_info[2] & (1 << 0))  extensions.push_back("SSE3");
 	if (IA_extension_info[2] & (1 << 9))  extensions.push_back("SSSE3");
+	if (IA_extension_info[2] & (1 << 12)) extensions.push_back("FMA3");
 	if (IA_extension_info[2] & (1 << 19)) extensions.push_back("SSE4.1");
 	if (IA_extension_info[2] & (1 << 20)) extensions.push_back("SSE4.2");
 	if (IA_extension_info[2] & (1 << 25)) extensions.push_back("AES");
 	if (IA_extension_info[2] & (1 << 28)) extensions.push_back("AVX");
-	if (IA_extension_info[2] & (1 << 12)) extensions.push_back("FMA3");
 
 	// Print all detected extensions
 	cout << "IA Extensions supported:\n";
@@ -189,7 +189,8 @@ void get_CPU_info()
 void get_advanced_CPU_info() {
 	// tipul, familia, modelul 
 	int cpuInfo[4];
-	__cpuid(cpuInfo, 1); int eax = cpuInfo[0];
+	__cpuid(cpuInfo, 1); 
+	int eax = cpuInfo[0];
 	// valoarea din EAX 
 	int stepping = eax & 0xF;
 	int model = (eax >> 4) & 0xF;
