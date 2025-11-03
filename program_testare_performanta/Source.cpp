@@ -1,10 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <comdef.h>
-#include <windows.h>
 #include <wbemidl.h>
-#include <iomanip>
-#include <string>
 #include <set>
 #pragma comment(lib, "wbemuuid.lib")
 
@@ -304,8 +301,6 @@ void getRAMInfo() {
 	int moduleIndex = 0;
 	long long totalCapacityBytes = 0;
 	std::set<wstring> channelSet;
-
-	cout << fixed << setprecision(1);
 
 	while (pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn) == S_OK) {
 		VARIANT vt;
