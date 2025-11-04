@@ -100,7 +100,7 @@ void get_mem_paging_info()
 
 void get_CPU_info()
 {
-	// Semnatura producatorului
+	// Vendor's signature
 	int info[4]{};
 	__cpuid(info, 0);
 	char vendor[13]{};
@@ -123,6 +123,7 @@ void get_CPU_info()
 
 	cout << "CPU: " << brand << "\n";
 
+	// CPU Frequency
 	getCPUFrequency();
 
 	// number of cores and threads
@@ -155,7 +156,7 @@ void get_CPU_info()
 	cout << "Number of threads: " << threads << "\n";
 	cout << "Number of threads per core: " << threadsPerCore << "\n";
 
-	int IA_extension_info[4];  // CPUID registers
+	int IA_extension_info[4];
 
 	// EAX = 1 - standard feature flags
 	__cpuid(IA_extension_info, 1);
@@ -175,7 +176,6 @@ void get_CPU_info()
 	if (IA_extension_info[2] & (1 << 25)) extensions.push_back("AES");
 	if (IA_extension_info[2] & (1 << 28)) extensions.push_back("AVX");
 
-	// Print all detected extensions
 	cout << "IA Extensions supported:\n";
 	for (const auto& ext : extensions) {
 		cout << "- " << ext << "\n";
@@ -184,11 +184,11 @@ void get_CPU_info()
 
 
 void get_advanced_CPU_info() {
-	// tipul, familia, modelul 
+	// Type, family, model 
 	int cpuInfo[4];
 	__cpuid(cpuInfo, 1); 
 	int eax = cpuInfo[0];
-	// valoarea din EAX 
+	
 	int stepping = eax & 0xF;
 	int model = (eax >> 4) & 0xF;
 	int family = (eax >> 8) & 0xF;
@@ -214,10 +214,10 @@ void get_cache_info() {
 	int level = 0;
 
 	while (true) {
-		__cpuidex(info, 0x8000001D, level);  // Extended cache enumeration for AMD
+		__cpuidex(info, 0x8000001D, level);  // extended cache enumration
 		int cacheType = info[0] & 0x1F;      // EAX[4:0] - cache type
 
-		if (cacheType == 0)  // 0 = null (no more caches)
+		if (cacheType == 0) // no more caches
 			break;
 
 		int cacheLevel = (info[0] >> 5) & 0x7;        // EAX[7:5] - cache level
@@ -243,21 +243,21 @@ void get_cache_info() {
 		case 1: cacheTypeStr = "Data Cache"; break;
 		case 2: cacheTypeStr = "Instruction Cache"; break;
 		case 3: cacheTypeStr = "Unified Cache"; break;
-		default: cacheTypeStr = "Rezervat / Necunoscut"; break;
+		default: cacheTypeStr = "Reserved / Unknown"; break;
 		}
 
-		cout << "Nivel: L" << cacheLevel << " (" << cacheTypeStr << ")\n";
-		cout << "Dimensiune: " << cacheSizeKB << " KB (" << cacheSizeMB << " MB)\n";
+		cout << "Level: L" << cacheLevel << " (" << cacheTypeStr << ")\n";
+		cout << "Size: " << cacheSizeKB << " KB (" << cacheSizeMB << " MB)\n";
 		cout << "Line size: " << lineSize << " bytes\n";
 		cout << "Partitions: " << partitions << "\n";
 		cout << "Ways of associativity: " << waysAssoc << "\n";
 		cout << "Sets: " << sets << "\n";
-		cout << "Fully associative: " << (isFullyAssoc ? "Da" : "Nu") << "\n";
-		cout << "Self-initializing: " << (selfInit ? "Da" : "Nu") << "\n";
-		cout << "Max threads sharing cache: " << maxThreads << "\n";
-		cout << "Max cores in package: " << maxCores << "\n";
-		cout << "Complex indexing: " << (complexIndexing ? "Da" : "Nu") << "\n";
-		cout << "Includes lower levels: " << (includesLower ? "Da" : "Nu") << "\n";
+		cout << "Fully associative: " << (isFullyAssoc ? "Yes" : "No") << "\n";
+		cout << "Self-initializing: " << (selfInit ? "Yes" : "No") << "\n";
+		cout << "Max no. of threads sharing cache: " << maxThreads << "\n";
+		cout << "Max no. of cores in package: " << maxCores << "\n";
+		cout << "Complex indexing: " << (complexIndexing ? "Yes" : "No") << "\n";
+		cout << "Includes lower levels: " << (includesLower ? "Yes" : "No") << "\n";
 
 		cout << "---------------------------------------------\n";
 		level++;
@@ -451,10 +451,10 @@ int main()
 	get_advanced_CPU_info();
 	cout << "\n";
 
-	get_mem_paging_info();
+	get_cache_info();
 	cout << "\n";
 
-	get_cache_info();
+	get_mem_paging_info();
 	cout << "\n";
 
 	getRAMInfo();
