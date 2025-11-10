@@ -3,35 +3,49 @@
 #include <comdef.h>
 #include <wbemidl.h>
 #include <set>
+#include <sstream>
 #pragma comment(lib, "wbemuuid.lib")
 
 using namespace std;
 
-void getCPUFrequency()
+void get_CPU_Frequency()
 {
 	HRESULT hres;
 
 	// Initialize COM
 	hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-	if (FAILED(hres)) return;
+	if (FAILED(hres)) {
+		return;
+	}
 
 	// Initialize security
 	hres = CoInitializeSecurity(NULL, -1, NULL, NULL,
 		RPC_C_AUTHN_LEVEL_DEFAULT,
 		RPC_C_IMP_LEVEL_IMPERSONATE,
 		NULL, EOAC_NONE, NULL);
-	if (FAILED(hres)) { CoUninitialize(); return; }
+
+	if (FAILED(hres)) { 
+		CoUninitialize(); 
+		return; 
+	}
 
 	// Create WMI locator
 	IWbemLocator* pLoc = nullptr;
 	hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
 		IID_IWbemLocator, (LPVOID*)&pLoc);
-	if (FAILED(hres)) { CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		CoUninitialize(); 
+		return; 
+	}
 
 	// Connect to WMI namespace
 	IWbemServices* pSvc = nullptr;
 	hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc);
-	if (FAILED(hres)) { pLoc->Release(); CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		pLoc->Release(); 
+		CoUninitialize(); 
+		return; 
+	}
 
 	// Set security levels
 	HRESULT hr = CoSetProxyBlanket(pSvc,
@@ -57,15 +71,18 @@ void getCPUFrequency()
 		bstr_t("SELECT MaxClockSpeed FROM Win32_Processor"),
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
 		NULL, &pEnumerator);
-	if (FAILED(hres)) { pSvc->Release(); pLoc->Release(); CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		pSvc->Release(); 
+		pLoc->Release(); 
+		CoUninitialize(); 
+		return; 
+	}
 
 	IWbemClassObject* pclsObj = nullptr;
 	ULONG uReturn = 0;
 
-	// Retrieve the first processor's MaxClockSpeed
 	HRESULT hrClockSpeed = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
-	if (SUCCEEDED(hrClockSpeed) && uReturn != 0)
-	{
+	if (SUCCEEDED(hrClockSpeed) && uReturn != 0) {
 		VARIANT vt;
 		VariantInit(&vt);
 
@@ -77,26 +94,36 @@ void getCPUFrequency()
 		pclsObj->Release();
 	}
 
-	// Cleanup
 	pEnumerator->Release();
 	pSvc->Release();
 	pLoc->Release();
 	CoUninitialize();
 }
 
+void get_advanced_CPU_info() {
+	// Type, family, model 
+	int cpuInfo[4];
+	__cpuid(cpuInfo, 1);
+	int eax = cpuInfo[0];
 
-void get_mem_paging_info()
-{
-	SYSTEM_INFO sysInfo;
-	GetSystemInfo(&sysInfo);
+	int stepping = eax & 0xF;
+	int model = (eax >> 4) & 0xF;
+	int family = (eax >> 8) & 0xF;
+	int type = (eax >> 12) & 0x3;
+	int extModel = (eax >> 16) & 0xF;
+	int extFamily = (eax >> 20) & 0xFF;
+	if (family == 6 || family == 15) {
+		model += (extModel << 4);
+	}
+	if (family == 15) {
+		family += extFamily;
+	}
 
-	cout << "Page Size: " << sysInfo.dwPageSize / 1024.0 << " KB\n";
-	cout << "Allocation Granularity: " << sysInfo.dwAllocationGranularity / 1024.0 << " KB\n";
-	cout << "Minimum Application Virtual Address: 0x" << sysInfo.lpMinimumApplicationAddress << "\n";
-	cout << "Maximum Application Virtual Address: 0x" << sysInfo.lpMaximumApplicationAddress << "\n";
+	cout << "Processor type: " << type << "\n";
+	cout << "Family ID: " << family << "\n";
+	cout << "Model ID: " << model << "\n";
+	cout << "Stepping ID: " << stepping << "\n";
 }
-
-
 
 void get_CPU_info()
 {
@@ -115,8 +142,7 @@ void get_CPU_info()
 	char brand[49]{};
 	int brandInfo[4];
 
-	for (int i = 0; i < 3; i++)
-	{
+	for (int i = 0; i < 3; i++) {
 		__cpuid(brandInfo, 0x80000002 + i);
 		memcpy(brand + i * 16, brandInfo, 16);
 	}
@@ -124,14 +150,13 @@ void get_CPU_info()
 	cout << "CPU: " << brand << "\n";
 
 	// CPU Frequency
-	getCPUFrequency();
+	get_CPU_Frequency();
 
 	// number of cores and threads
 	unsigned int eax, ebx, ecx, edx;
 	int threadsPerCore = 0, threads = 0;
 
-	for (int level = 0; level < 3; ++level)
-	{
+	for (int level = 0; level < 3; ++level) {
 		int regs[4];
 		__cpuidex(regs, 0xB, level);
 		eax = regs[0];
@@ -140,12 +165,10 @@ void get_CPU_info()
 		edx = regs[3];
 
 		int levelType = (ecx >> 8) & 0xFF;
-		if (levelType == 1)
-		{
+		if (levelType == 1) {
 			threadsPerCore = ebx & 0xFFFF; // threads per core
 		}
-		if (levelType == 2)
-		{
+		if (levelType == 2) {
 			threads = ebx & 0xFFFF; // number of threads
 		}
 	}
@@ -176,36 +199,13 @@ void get_CPU_info()
 	if (IA_extension_info[2] & (1 << 25)) extensions.push_back("AES");
 	if (IA_extension_info[2] & (1 << 28)) extensions.push_back("AVX");
 
-	cout << "IA Extensions supported:\n";
+	cout << "\nIA Extensions supported:\n";
 	for (const auto& ext : extensions) {
 		cout << "- " << ext << "\n";
 	}
-}
 
-
-void get_advanced_CPU_info() {
-	// Type, family, model 
-	int cpuInfo[4];
-	__cpuid(cpuInfo, 1); 
-	int eax = cpuInfo[0];
-	
-	int stepping = eax & 0xF;
-	int model = (eax >> 4) & 0xF;
-	int family = (eax >> 8) & 0xF;
-	int type = (eax >> 12) & 0x3;
-	int extModel = (eax >> 16) & 0xF;
-	int extFamily = (eax >> 20) & 0xFF;
-	if (family == 6 || family == 15) {
-		model += (extModel << 4); 
-	}
-	if (family == 15) {
-		family += extFamily;
-	}
-
-	cout << "Processor type: " << type << "\n";
-	cout << "Family ID: " << family << "\n";
-	cout << "Model ID: " << model << "\n";
-	cout << "Stepping ID: " << stepping << "\n";
+	cout << "\n";
+	get_advanced_CPU_info();
 }
 
 
@@ -217,8 +217,9 @@ void get_cache_info() {
 		__cpuidex(info, 0x8000001D, level);  // extended cache enumration
 		int cacheType = info[0] & 0x1F;      // EAX[4:0] - cache type
 
-		if (cacheType == 0) // no more caches
+		if (cacheType == 0) { // no more caches
 			break;
+		}
 
 		int cacheLevel = (info[0] >> 5) & 0x7;        // EAX[7:5] - cache level
 		int selfInit = (info[0] >> 8) & 0x1;         // EAX[8] - self initializing
@@ -240,10 +241,10 @@ void get_cache_info() {
 
 		string cacheTypeStr;
 		switch (cacheType) {
-		case 1: cacheTypeStr = "Data Cache"; break;
-		case 2: cacheTypeStr = "Instruction Cache"; break;
-		case 3: cacheTypeStr = "Unified Cache"; break;
-		default: cacheTypeStr = "Reserved / Unknown"; break;
+			case 1: cacheTypeStr = "Data Cache"; break;
+			case 2: cacheTypeStr = "Instruction Cache"; break;
+			case 3: cacheTypeStr = "Unified Cache"; break;
+			default: cacheTypeStr = "Reserved / Unknown"; break;
 		}
 
 		cout << "Level: L" << cacheLevel << " (" << cacheTypeStr << ")\n";
@@ -259,33 +260,67 @@ void get_cache_info() {
 		cout << "Complex indexing: " << (complexIndexing ? "Yes" : "No") << "\n";
 		cout << "Includes lower levels: " << (includesLower ? "Yes" : "No") << "\n";
 
-		cout << "---------------------------------------------\n";
+		cout << "\n\n";
 		level++;
 	}
 }
 
+void get_mem_paging_info()
+{
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
 
+	cout << "Page Size: " << sysInfo.dwPageSize / 1024.0 << " KB\n";
+	cout << "Allocation Granularity: " << sysInfo.dwAllocationGranularity / 1024.0 << " KB\n";
+	cout << "Minimum Application Virtual Address: 0x" << sysInfo.lpMinimumApplicationAddress << "\n";
+	cout << "Maximum Application Virtual Address: 0x" << sysInfo.lpMaximumApplicationAddress << "\n";
+}
 
-void getRAMInfo() {
+string ws2s(const wstring& wstr) {
+	if (wstr.empty()) return {};
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
+	string strTo(size_needed, 0);
+	WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+	return strTo;
+}
+
+void get_RAM_Info() {
 	HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-	if (FAILED(hres)) return;
+	if (FAILED(hres)) {
+		return;
+	}
 
 	hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT,
 		RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-	if (FAILED(hres)) { CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		CoUninitialize(); 
+		return; 
+	}
 
 	IWbemLocator* pLoc = nullptr;
 	hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
 		IID_IWbemLocator, (LPVOID*)&pLoc);
-	if (FAILED(hres)) { CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		CoUninitialize(); 
+		return; 
+	}
 
 	IWbemServices* pSvc = nullptr;
 	hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc);
-	if (FAILED(hres)) { pLoc->Release(); CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		pLoc->Release(); 
+		CoUninitialize(); 
+		return; 
+	}
 
 	hres = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL,
 		RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE);
-	if (FAILED(hres)) { pSvc->Release(); pLoc->Release(); CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		pSvc->Release(); 
+		pLoc->Release(); 
+		CoUninitialize(); 
+		return; 
+	}
 
 	IEnumWbemClassObject* pEnumerator = nullptr;
 	hres = pSvc->ExecQuery(bstr_t("WQL"),
@@ -294,7 +329,12 @@ void getRAMInfo() {
 			"SerialNumber, PartNumber, SMBIOSMemoryType, DataWidth, TotalWidth "
 			"FROM Win32_PhysicalMemory"),
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL, &pEnumerator);
-	if (FAILED(hres)) { pSvc->Release(); pLoc->Release(); CoUninitialize(); return; }
+	if (FAILED(hres)) { 
+		pSvc->Release(); 
+		pLoc->Release(); 
+		CoUninitialize(); 
+		return; 
+	}
 
 	IWbemClassObject* pclsObj = nullptr;
 	ULONG uReturn = 0;
@@ -310,7 +350,7 @@ void getRAMInfo() {
 
 		// Manufacturer
 		pclsObj->Get(L"Manufacturer", 0, &vt, 0, 0);
-		wcout << L"Manufacturer: " << (vt.vt != VT_EMPTY ? vt.bstrVal : L"Unknown") << L"\n";
+		cout << "Manufacturer: " << (vt.vt != VT_EMPTY ? ws2s(vt.bstrVal) : "Unknown") << "\n";
 		VariantClear(&vt);
 
 		// Capacity
@@ -329,13 +369,13 @@ void getRAMInfo() {
 
 		// Device Locator
 		pclsObj->Get(L"DeviceLocator", 0, &vt, 0, 0);
-		wcout << L"Device Locator: " << (vt.vt != VT_EMPTY ? vt.bstrVal : L"Unknown") << L"\n";
+		cout << "Device Locator: " << (vt.vt != VT_EMPTY ? ws2s(vt.bstrVal) : "Unknown") << "\n";
 		VariantClear(&vt);
 
 		// BankLabel
 		pclsObj->Get(L"BankLabel", 0, &vt, 0, 0);
 		wstring bankLabel = (vt.vt != VT_EMPTY ? vt.bstrVal : L"Unknown");
-		wcout << L"Bank Label: " << bankLabel << L"\n";
+		cout << "Bank Label: " << ws2s(bankLabel) << "\n";
 		VariantClear(&vt);
 
 		// Channel
@@ -349,25 +389,27 @@ void getRAMInfo() {
 		pclsObj->Get(L"FormFactor", 0, &vt, 0, 0);
 		string formFactorStr;
 		switch (vt.uintVal) {
-		case 8: formFactorStr = "DIMM"; break;
-		case 12: formFactorStr = "SODIMM"; break;
-		default: formFactorStr = "Other"; break;
+			case 8: formFactorStr = "DIMM"; break;
+			case 12: formFactorStr = "SODIMM"; break;
+			default: formFactorStr = "Other"; break;
 		}
 		cout << "Form Factor: " << formFactorStr << "\n";
 		VariantClear(&vt);
 
 		// Voltage
 		pclsObj->Get(L"ConfiguredVoltage", 0, &vt, 0, 0);
-		if (vt.vt != VT_EMPTY) cout << "Configured Voltage: " << vt.uintVal / 1000.0 << " V\n";
+		if (vt.vt != VT_EMPTY) {
+			cout << "Configured Voltage: " << vt.uintVal / 1000.0 << " V\n";
+		}
 		VariantClear(&vt);
 
 		// Serial & Part
 		pclsObj->Get(L"SerialNumber", 0, &vt, 0, 0);
-		wcout << L"Serial Number: " << (vt.vt != VT_EMPTY ? vt.bstrVal : L"Unknown") << L"\n";
+		cout << "Serial Number: " << (vt.vt != VT_EMPTY ? ws2s(vt.bstrVal) : "Unknown") << "\n";
 		VariantClear(&vt);
 
 		pclsObj->Get(L"PartNumber", 0, &vt, 0, 0);
-		wcout << L"Part Number: " << (vt.vt != VT_EMPTY ? vt.bstrVal : L"Unknown") << L"\n";
+		cout << "Part Number: " << (vt.vt != VT_EMPTY ? ws2s(vt.bstrVal) : "Unknown") << "\n";
 		VariantClear(&vt);
 
 		// Type
@@ -375,14 +417,14 @@ void getRAMInfo() {
 		unsigned int smType = (vt.vt != VT_EMPTY ? vt.uintVal : 0);
 		string memTypeStr;
 		switch (smType) {
-		case 20: memTypeStr = "DDR"; break;
-		case 21: memTypeStr = "DDR2"; break;
-		case 22: memTypeStr = "DDR2 FB-DIMM"; break;
-		case 24: memTypeStr = "DDR3"; break;
-		case 26: memTypeStr = "DDR4"; break;
-		case 30: memTypeStr = "DDR5"; break; // SMBIOS < 3.5
-		case 34: memTypeStr = "DDR5"; break; // SMBIOS >= 3.5
-		default: memTypeStr = "Unknown"; break;
+			case 20: memTypeStr = "DDR"; break;
+			case 21: memTypeStr = "DDR2"; break;
+			case 22: memTypeStr = "DDR2 FB-DIMM"; break;
+			case 24: memTypeStr = "DDR3"; break;
+			case 26: memTypeStr = "DDR4"; break;
+			case 30: memTypeStr = "DDR5"; break; // SMBIOS < 3.5
+			case 34: memTypeStr = "DDR5"; break; // SMBIOS >= 3.5
+			default: memTypeStr = "Unknown"; break;
 		}
 		cout << "Type: " << memTypeStr << "\n";
 		VariantClear(&vt);
@@ -401,7 +443,7 @@ void getRAMInfo() {
 		cout << "ECC: " << ((totalWidth > dataWidth) ? "Yes" : "No") << "\n";
 
 		pclsObj->Release();
-		cout << "\n";
+		cout << "\n\n";
 	}
 	pEnumerator->Release();
 
@@ -430,11 +472,11 @@ void getRAMInfo() {
 	// Channel Configuration
 	cout << "Channel Configuration: ";
 	switch (channelSet.size()) {
-	case 1: cout << "Single-channel\n"; break;
-	case 2: cout << "Dual-channel\n"; break;
-	case 3: cout << "Triple-channel\n"; break;
-	case 4: cout << "Quad-channel\n"; break;
-	default: cout << channelSet.size() << " channels\n"; break;
+		case 1: cout << "Single-channel\n"; break;
+		case 2: cout << "Dual-channel\n"; break;
+		case 3: cout << "Triple-channel\n"; break;
+		case 4: cout << "Quad-channel\n"; break;
+		default: cout << channelSet.size() << " channels\n"; break;
 	}
 
 	pSvc->Release();
@@ -444,20 +486,59 @@ void getRAMInfo() {
 
 
 
-int main()
+extern "C" __declspec(dllexport)
+const char* getCPUInfo()
 {
+	static string result;
+	ostringstream oss;
+	streambuf* old = cout.rdbuf(oss.rdbuf());
+
 	get_CPU_info();
-	cout << "\n";
-	get_advanced_CPU_info();
-	cout << "\n";
+
+	cout.rdbuf(old);
+	result = oss.str();
+	return result.c_str();
+}
+
+
+extern "C" __declspec(dllexport)
+const char* getCacheInfo()
+{
+	static string result;
+	ostringstream oss;
+	streambuf* old = cout.rdbuf(oss.rdbuf());
 
 	get_cache_info();
-	cout << "\n";
+
+	cout.rdbuf(old);
+	result = oss.str();
+	return result.c_str();
+}
+
+extern "C" __declspec(dllexport)
+const char* getMemPagingInfo()
+{
+	static string result;
+	ostringstream oss;
+	streambuf* old = cout.rdbuf(oss.rdbuf());
 
 	get_mem_paging_info();
-	cout << "\n";
 
-	getRAMInfo();
+	cout.rdbuf(old);
+	result = oss.str();
+	return result.c_str();
+}
 
-	return 0;
+extern "C" __declspec(dllexport)
+const char* getRAMInfo()
+{
+	static string result;
+	ostringstream oss;
+	streambuf* old = cout.rdbuf(oss.rdbuf());
+
+	get_RAM_Info();
+
+	cout.rdbuf(old);
+	result = oss.str();
+	return result.c_str();
 }
