@@ -3,9 +3,8 @@ import customtkinter as ctk
 import os
 
 
-dll = ctypes.CDLL(
-    r"D:\Alex\UTCN\An 3\Semestrul 1\Structura_sistemelor_de_calcul\Proiect\program_testare_performanta"
-    r"\x64\Release\program_testare_performanta.dll")
+dll_path = os.path.join(os.path.dirname(__file__), "program_testare_performanta.dll")
+dll = ctypes.CDLL(dll_path)
 
 
 dll.getCPUInfo.restype = ctypes.c_char_p
@@ -20,6 +19,7 @@ ctk.set_default_color_theme("blue")
 root = ctk.CTk()
 root.title("PC Benchmark App")
 root.geometry("1000x650")
+
 
 icon_path = "logo.ico"
 try:
