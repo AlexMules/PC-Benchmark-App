@@ -20,7 +20,6 @@ root = ctk.CTk()
 root.title("PC Benchmark App")
 root.geometry("1000x650")
 
-
 icon_path = "logo.ico"
 try:
     if os.path.exists(icon_path):
