@@ -126,6 +126,9 @@
     <ClCompile Include="Data_transfer_speed.cpp" />
     <ClCompile Include="System_info.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Data_transfer_speed.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

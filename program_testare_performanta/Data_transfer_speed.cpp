@@ -1,6 +1,9 @@
 // Data_transfer_speed.cpp
 // Compile (MSVC): cl /O2 /EHsc Data_transfer_speed.cpp
 
+#define BENCHMARKDLL_EXPORTS
+#include "Data_transfer_speed.hpp"
+
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -283,37 +286,24 @@ public:
     }
 };
 
-
-int main() {
-    vector<size_t> blockSizes = { 64 * KB, 512 * KB, 16 * MB, 128 * MB, 512 * MB, 1024 * MB };
-
-    DataTransferBenchmark bench;
-
-    cout << "=== Memory Transfer Benchmark ===\n";
-    cout << "Testing...\n\n";
-
-    for (size_t bs : blockSizes) {
-        if (bs < MB) {
-            cout << "--- Block Size: " << (bs / 1024) << " KB ---\n";
-        }
-        else {
-            cout << "--- Block Size: " << fixed << setprecision(0) << (bs / (double)MB) << " MB ---\n";
+extern "C" {
+    BENCHMARK void RunBenchmark(size_t blockSize, BenchmarkResult* result) {
+        if (!result) {
+            return;
         }
 
-        double seq = bench.sequentialAccess(bs);
-        cout << "  Sequential memcpy:  " << fixed << setprecision(2) << seq << " MB/s\n";
+        DataTransferBenchmark bench;
 
-        auto strides = getStrides(bs);
-        for (int s : strides) {
-            double str = bench.stridedAccess(bs, s);
-            cout << "  Strided (stride=" << s << "): " << setprecision(2) << str << " MB/s\n";
+        result->sequential = bench.sequentialAccess(blockSize);
+
+        auto strides = getStrides(blockSize);
+        result->stride_count = static_cast<int>(strides.size());
+
+        for (size_t i = 0; i < strides.size(); i++) {
+            result->strides[i] = strides[i];
+            result->strided_results[i] = bench.stridedAccess(blockSize, strides[i]);
         }
 
-        double rnd = bench.randomAccess(bs);
-        cout << "  Random access:      " << setprecision(2) << rnd << " MB/s\n";
-        cout << "\n";
+        result->random = bench.randomAccess(blockSize);
     }
-
-    cout << "TESTS COMPLETED SUCCESSFULLY!\n";
-    return 0;
 }
