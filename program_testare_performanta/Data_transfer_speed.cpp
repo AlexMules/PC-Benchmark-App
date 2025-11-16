@@ -254,7 +254,7 @@ public:
             shuffle(indices.begin(), indices.end(), g);
 
             volatile int dummy = 0;
-            for (size_t i = 0; i < min(accessCount, size_t(1000)); i++)
+            for (size_t i = 0; i < accessCount; i++)
                 dummy += (dst[indices[i]] = src[indices[i]]);
             doNotOptimize(dummy);
         }
