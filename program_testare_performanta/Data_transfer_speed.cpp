@@ -45,10 +45,10 @@ public:
 const size_t KB = 1024;
 const size_t MB = 1024 * KB;
 const size_t MAX_BUF = 512ULL * 1024ULL * 1024ULL; // MAX_BUF = 512 MB
+const size_t flushSize = 32ULL * 1024ULL * 1024ULL; // 32 MB
 
 // folosesc flushCache intre iteratii
 void flushCache(const size_t blockSize) {
-    size_t flushSize = min(blockSize * 2, MAX_BUF);
     static vector<char> flushBuffer(MAX_BUF, 1);
 
     // scriere in flushBuffer
