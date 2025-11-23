@@ -21,6 +21,9 @@
     <ClCompile Include="Data_transfer_speed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IntegerOperations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Data_transfer_speed.hpp">

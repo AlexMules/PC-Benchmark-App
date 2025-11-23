@@ -1,4 +1,3 @@
-// Data_transfer_speed.cpp
 // Compile (MSVC): cl /O2 /EHsc Data_transfer_speed.cpp
 
 #define BENCHMARKDLL_EXPORTS
