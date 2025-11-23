@@ -70,14 +70,29 @@ text_font = ctk.CTkFont(family="Consolas", size=14)
 main_frame = ctk.CTkFrame(app)
 main_frame.pack(fill="both", expand=True)
 
-btn_cpu = ctk.CTkButton(main_frame, text="CPU Info", width=200, height=40)
-btn_cache = ctk.CTkButton(main_frame, text="Cache Info", width=200, height=40)
-btn_paging = ctk.CTkButton(main_frame, text="Paging Info", width=200, height=40)
-btn_ram = ctk.CTkButton(main_frame, text="RAM Info", width=200, height=40)
+# Definim culorile pentru meniul principal (Uniforme: Albastru)
+MAIN_BTN_COLOR = "#2196F3"
+MAIN_BTN_HOVER = "#1976D2"
+
+btn_cpu = ctk.CTkButton(main_frame, text="CPU Info", width=200, height=40,
+                        fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+
+btn_cache = ctk.CTkButton(main_frame, text="Cache Info", width=200, height=40,
+                          fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+
+btn_paging = ctk.CTkButton(main_frame, text="Paging Info", width=200, height=40,
+                           fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+
+btn_ram = ctk.CTkButton(main_frame, text="RAM Info", width=200, height=40,
+                        fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+
 btn_benchmark = ctk.CTkButton(main_frame, text="Test Data Transfer Speed",
-                              width=200, height=40, fg_color="#4CAF50")
+                              width=200, height=40,
+                              fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+
 btn_integer = ctk.CTkButton(main_frame, text="Test Integer Operations",
-                            width=200, height=40, fg_color="#2196F3")
+                            width=200, height=40,
+                            fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 
 btn_cpu.pack(pady=10)
 btn_cache.pack(pady=10)
@@ -144,6 +159,7 @@ for i, (size_mb, label) in enumerate(sizes_config):
     cb.grid(row=0, column=i, padx=15, pady=5)
     checkboxes[size_mb] = var
 
+# BUTON START VERDE (#4CAF50)
 btn_run_benchmark = ctk.CTkButton(benchmark_frame,
                                   text="START TEST",
                                   width=200, height=50,
@@ -190,20 +206,19 @@ integer_duration_label = ctk.CTkLabel(integer_frame,
                                       text_color="#FFA500")
 integer_duration_label.pack(pady=5)
 
-# MODIFICARE AICI: Am scos culoarea gri (#888888) pentru a fi alb/standard
-# si am actualizat textul cu varianta simplificata
 integer_info_label = ctk.CTkLabel(integer_frame,
-                                  text="This benchmark evaluates the execution speed of integer operations:\n"
+                                  text="This benchmark measures the speed of integer operations:\n"
                                        "ADD, SUB, MUL, XOR, NOT, ROL, AND",
                                   font=ctk.CTkFont(family="Arial", size=12))
 integer_info_label.pack(pady=10)
 
+# BUTON START VERDE (#4CAF50) - MODIFICAT
 btn_run_integer = ctk.CTkButton(integer_frame,
                                 text="START TEST",
                                 width=200, height=50,
                                 font=ctk.CTkFont(family="Arial", size=16, weight="bold"),
-                                fg_color="#2196F3",
-                                hover_color="#1976D2")
+                                fg_color="#4CAF50",  # Verde
+                                hover_color="#45a049")
 btn_run_integer.pack(pady=20)
 
 integer_progress_bar = ctk.CTkProgressBar(integer_frame, width=500, mode="indeterminate")
@@ -399,7 +414,8 @@ def finish_benchmark():
 def finish_integer():
     integer_progress_bar.stop()
     integer_progress_bar.set(0)
-    btn_run_integer.configure(state="normal", text="START TEST", fg_color="#2196F3")
+    # RESETEAZA CULOAREA LA VERDE (#4CAF50) DUPA TERMINARE
+    btn_run_integer.configure(state="normal", text="START TEST", fg_color="#4CAF50")
     btn_back_integer.configure(state="normal")
 
 
