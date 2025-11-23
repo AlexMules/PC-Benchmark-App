@@ -108,7 +108,8 @@ public:
     {
     }
 
-    void runBenchmark() {
+    // Returns median GOps
+    double runBenchmark() {
         vector<double> scores;
         scores.reserve(NUM_SAMPLES);
 
@@ -117,33 +118,49 @@ public:
             runBenchmarkPass();
         }
 
-        auto benchStart = chrono::steady_clock::now();
-
+        // benchmark runs
         for (int i = 0; i < NUM_SAMPLES; i++) {
             double time = runBenchmarkPass();
             double gops = (OPS_PER_PASS / time) / 1e9;
             scores.push_back(gops);
         }
 
-        auto benchEnd = chrono::steady_clock::now();
-
-        double totalTime = chrono::duration<double>(benchEnd - benchStart).count();
-
         sort(scores.begin(), scores.end());
         double median_gops = scores[NUM_SAMPLES / 2];
-        double latency_ns = 1.0 / median_gops;
 
-        cout << fixed << setprecision(3);
-        cout << "Performance (Giga Operations per Second):  " << median_gops << " GOps" << endl;
-        cout << "Latency:          " << setprecision(4) << latency_ns << " ns/op" << endl;
-        cout << "Benchmark duration:   " << setprecision(1) << totalTime << " seconds" << endl;
-        cout << "-------------------------------------------" << endl;
+        return median_gops;
     }
 };
 
-int main() {
-    IntegerOperationsBenchmark benchmark;
-    benchmark.runBenchmark();
+// Structure for benchmark results
+struct BenchmarkResult {
+    double gops;        // Giga Operations per Second
+    double latency_ns;  // nanoseconds per operation
+    double duration;    // benchmark duration in seconds
+};
 
-    return 0;
+// Exported functions for DLL
+extern "C" {
+    // Returns full benchmark results
+    __declspec(dllexport) BenchmarkResult runIntegerBenchmark() {
+        auto startTime = chrono::steady_clock::now();
+
+        IntegerOperationsBenchmark benchmark;
+        double median_gops = benchmark.runBenchmark();
+
+        auto endTime = chrono::steady_clock::now();
+        double duration = chrono::duration<double>(endTime - startTime).count();
+
+        BenchmarkResult result;
+        result.gops = median_gops;
+        result.latency_ns = 1.0 / median_gops; // nanoseconds per operation
+        result.duration = duration;
+
+        return result;
+    }
+
+    __declspec(dllexport) double runIntegerBenchmarkSimple() {
+        IntegerOperationsBenchmark benchmark;
+        return benchmark.runBenchmark();
+    }
 }

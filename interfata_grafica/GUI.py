@@ -5,11 +5,15 @@ import os
 import threading
 
 # Load DLL-uri
+# Asigura-te ca fisierele .dll sunt in acelasi folder cu acest script
 dll_path = os.path.join(os.path.dirname(__file__), "program_testare_performanta.dll")
 dll = ctypes.CDLL(dll_path)
 
 benchmark_dll_path = os.path.join(os.path.dirname(__file__), "Data_transfer_speed.dll")
 benchmark_dll = ctypes.CDLL(benchmark_dll_path)
+
+integer_dll_path = os.path.join(os.path.dirname(__file__), "Integer_operations.dll")
+integer_dll = ctypes.CDLL(integer_dll_path)
 
 # Setup pentru DLL info
 dll.getCPUInfo.restype = ctypes.c_char_p
@@ -31,6 +35,19 @@ class BenchmarkResult(Structure):
 
 benchmark_dll.RunBenchmark.argtypes = [c_size_t, ctypes.POINTER(BenchmarkResult)]
 benchmark_dll.RunBenchmark.restype = None
+
+
+# Setup pentru Integer Operations DLL
+class IntegerBenchmarkResult(Structure):
+    _fields_ = [
+        ("gops", c_double),
+        ("latency_ns", c_double),
+        ("duration", c_double)
+    ]
+
+
+integer_dll.runIntegerBenchmark.restype = IntegerBenchmarkResult
+integer_dll.runIntegerBenchmark.argtypes = []
 
 # Theme setup
 ctk.set_appearance_mode("System")
@@ -59,12 +76,15 @@ btn_paging = ctk.CTkButton(main_frame, text="Paging Info", width=200, height=40)
 btn_ram = ctk.CTkButton(main_frame, text="RAM Info", width=200, height=40)
 btn_benchmark = ctk.CTkButton(main_frame, text="Test Data Transfer Speed",
                               width=200, height=40, fg_color="#4CAF50")
+btn_integer = ctk.CTkButton(main_frame, text="Test Integer Operations",
+                            width=200, height=40, fg_color="#2196F3")
 
 btn_cpu.pack(pady=10)
 btn_cache.pack(pady=10)
 btn_paging.pack(pady=10)
 btn_ram.pack(pady=10)
 btn_benchmark.pack(pady=10)
+btn_integer.pack(pady=10)
 
 # ========== INFO FRAME (pentru CPU, Cache, etc) ==========
 info_frame = ctk.CTkFrame(app)
@@ -79,16 +99,14 @@ text_widget.configure(state="disabled")
 btn_back_info = ctk.CTkButton(info_frame, text="Back", width=100)
 btn_back_info.pack(pady=10)
 
-# ========== BENCHMARK FRAME ==========
+# ========== BENCHMARK FRAME (Data Transfer) ==========
 benchmark_frame = ctk.CTkFrame(app)
 
-# Title
 benchmark_title = ctk.CTkLabel(benchmark_frame,
                                text="Data Transfer Benchmark",
                                font=ctk.CTkFont(family="Arial", size=20, weight="bold"))
 benchmark_title.pack(pady=20)
 
-# Warning label
 warning_label = ctk.CTkLabel(benchmark_frame,
                              text="WARNING: Close all other applications and processes during testing!",
                              font=ctk.CTkFont(family="Arial", size=13),
@@ -101,7 +119,6 @@ duration_label = ctk.CTkLabel(benchmark_frame,
                               text_color="#FFA500")
 duration_label.pack(pady=5)
 
-# Block sizes selection
 sizes_label = ctk.CTkLabel(benchmark_frame,
                            text="Select block sizes to test:",
                            font=ctk.CTkFont(family="Arial", size=12))
@@ -112,8 +129,8 @@ sizes_frame.pack(pady=5)
 
 checkboxes = {}
 sizes_config = [
-    (64 / 1024, "64 KB"),      # 64
-    (512 / 1024, "512 KB"),    # 512 KB
+    (64 / 1024, "64 KB"),
+    (512 / 1024, "512 KB"),
     (16, "16 MB"),
     (128, "128 MB"),
     (512, "512 MB"),
@@ -123,7 +140,7 @@ sizes_config = [
 for i, (size_mb, label) in enumerate(sizes_config):
     var = ctk.BooleanVar(value=True)
     cb = ctk.CTkCheckBox(sizes_frame, text=label, variable=var,
-    font=ctk.CTkFont(family="Arial", size=11))
+                         font=ctk.CTkFont(family="Arial", size=11))
     cb.grid(row=0, column=i, padx=15, pady=5)
     checkboxes[size_mb] = var
 
@@ -135,30 +152,81 @@ btn_run_benchmark = ctk.CTkButton(benchmark_frame,
                                   hover_color="#45a049")
 btn_run_benchmark.pack(pady=20)
 
-# Progress bar
 progress_bar = ctk.CTkProgressBar(benchmark_frame, width=500, mode="indeterminate")
 progress_bar.pack(pady=10)
 progress_bar.set(0)
 
-# Results label
 results_label = ctk.CTkLabel(benchmark_frame,
                              text="Results:",
                              font=ctk.CTkFont(family="Arial", size=13, weight="bold"))
 results_label.pack(pady=5)
 
-# Results text area
 benchmark_text = ctk.CTkTextbox(benchmark_frame, width=880, height=300,
                                 font=ctk.CTkFont(family="Consolas", size=14))
 benchmark_text.pack(padx=10, pady=10)
 benchmark_text.configure(state="disabled")
 
-# Back button
 btn_back_benchmark = ctk.CTkButton(benchmark_frame, text="Back to Menu",
                                    width=150, height=35)
 btn_back_benchmark.pack(pady=10)
 
+# ========== INTEGER OPERATIONS FRAME ==========
+integer_frame = ctk.CTkFrame(app)
+
+integer_title = ctk.CTkLabel(integer_frame,
+                             text="Integer Operations Benchmark",
+                             font=ctk.CTkFont(family="Arial", size=20, weight="bold"))
+integer_title.pack(pady=20)
+
+integer_warning_label = ctk.CTkLabel(integer_frame,
+                                     text="WARNING: Close all other applications and processes during testing!",
+                                     font=ctk.CTkFont(family="Arial", size=13),
+                                     text_color="#FF6B6B")
+integer_warning_label.pack(pady=10)
+
+integer_duration_label = ctk.CTkLabel(integer_frame,
+                                      text="NOTE: Test may take several minutes to complete.",
+                                      font=ctk.CTkFont(family="Arial", size=12),
+                                      text_color="#FFA500")
+integer_duration_label.pack(pady=5)
+
+# MODIFICARE AICI: Am scos culoarea gri (#888888) pentru a fi alb/standard
+# si am actualizat textul cu varianta simplificata
+integer_info_label = ctk.CTkLabel(integer_frame,
+                                  text="This benchmark evaluates the execution speed of integer operations:\n"
+                                       "ADD, SUB, MUL, XOR, NOT, ROL, AND",
+                                  font=ctk.CTkFont(family="Arial", size=12))
+integer_info_label.pack(pady=10)
+
+btn_run_integer = ctk.CTkButton(integer_frame,
+                                text="START TEST",
+                                width=200, height=50,
+                                font=ctk.CTkFont(family="Arial", size=16, weight="bold"),
+                                fg_color="#2196F3",
+                                hover_color="#1976D2")
+btn_run_integer.pack(pady=20)
+
+integer_progress_bar = ctk.CTkProgressBar(integer_frame, width=500, mode="indeterminate")
+integer_progress_bar.pack(pady=10)
+integer_progress_bar.set(0)
+
+integer_results_label = ctk.CTkLabel(integer_frame,
+                                     text="Results:",
+                                     font=ctk.CTkFont(family="Arial", size=13, weight="bold"))
+integer_results_label.pack(pady=5)
+
+integer_text = ctk.CTkTextbox(integer_frame, width=880, height=300,
+                              font=ctk.CTkFont(family="Consolas", size=14))
+integer_text.pack(padx=10, pady=10)
+integer_text.configure(state="disabled")
+
+btn_back_integer = ctk.CTkButton(integer_frame, text="Back to Menu",
+                                 width=150, height=35)
+btn_back_integer.pack(pady=10)
+
 # ========== GLOBAL STATE ==========
 is_running = False
+is_integer_running = False
 
 
 # ========== FUNCTIONS ==========
@@ -184,7 +252,6 @@ def show_benchmark():
     main_frame.pack_forget()
     benchmark_frame.pack(fill="both", expand=True)
 
-    # Initial message
     benchmark_text.configure(state="normal")
     benchmark_text.delete("0.0", "end")
     benchmark_text.insert("0.0", "Ready to run benchmark.\n")
@@ -199,9 +266,25 @@ def go_back_from_benchmark():
         main_frame.pack(fill="both", expand=True)
 
 
-def log_benchmark(message):
-    """Thread-safe logging to benchmark text widget"""
+def show_integer():
+    main_frame.pack_forget()
+    integer_frame.pack(fill="both", expand=True)
 
+    integer_text.configure(state="normal")
+    integer_text.delete("0.0", "end")
+    integer_text.insert("0.0", "Ready to run Integer Operations Benchmark.\n")
+    integer_text.insert("end", "Click 'START TEST' to begin...\n")
+    integer_text.configure(state="disabled")
+
+
+def go_back_from_integer():
+    global is_integer_running
+    if not is_integer_running:
+        integer_frame.pack_forget()
+        main_frame.pack(fill="both", expand=True)
+
+
+def log_benchmark(message):
     def _log():
         benchmark_text.configure(state="normal")
         benchmark_text.insert("end", message)
@@ -211,10 +294,26 @@ def log_benchmark(message):
     app.after(0, _log)
 
 
+def log_integer(message):
+    def _log():
+        integer_text.configure(state="normal")
+        integer_text.insert("end", message)
+        integer_text.see("end")
+        integer_text.configure(state="disabled")
+
+    app.after(0, _log)
+
+
 def clear_benchmark_log():
     benchmark_text.configure(state="normal")
     benchmark_text.delete("0.0", "end")
     benchmark_text.configure(state="disabled")
+
+
+def clear_integer_log():
+    integer_text.configure(state="normal")
+    integer_text.delete("0.0", "end")
+    integer_text.configure(state="disabled")
 
 
 def run_benchmark_thread(selected_sizes_with_labels):
@@ -229,7 +328,7 @@ def run_benchmark_thread(selected_sizes_with_labels):
 
         for size_mb, label in selected_sizes_with_labels:
             log_benchmark(f"{'-' * 50}\n")
-            log_benchmark(f"Block Size: {label}\n")  # <-- Folosește label-ul
+            log_benchmark(f"Block Size: {label}\n")
             log_benchmark(f"{'-' * 50}\n")
 
             result = BenchmarkResult()
@@ -257,6 +356,39 @@ def run_benchmark_thread(selected_sizes_with_labels):
         app.after(0, finish_benchmark)
 
 
+def run_integer_thread():
+    global is_integer_running
+
+    try:
+        log_integer("Please wait, this may take several minutes...\n\n")
+
+        # Run benchmark
+        result = integer_dll.runIntegerBenchmark()
+
+        log_integer("-" * 50 + "\n")
+        log_integer("                 RESULTS\n")
+        log_integer("-" * 50 + "\n\n")
+
+        log_integer(f"  Performance:  {result.gops:.3f} GOps\n")
+        log_integer(f"               (Giga Operations per Second)\n\n")
+
+        log_integer(f"  Latency:      {result.latency_ns:.4f} ns/op\n")
+        log_integer(f"               (nanoseconds per operation)\n\n")
+
+        log_integer(f"  Duration:     {result.duration:.1f} seconds\n\n")
+
+        log_integer("=" * 50 + "\n")
+        log_integer("BENCHMARK COMPLETED SUCCESSFULLY!\n")
+        log_integer("=" * 50 + "\n")
+
+    except Exception as e:
+        log_integer(f"\nERROR: {str(e)}\n")
+
+    finally:
+        is_integer_running = False
+        app.after(0, finish_integer)
+
+
 def finish_benchmark():
     progress_bar.stop()
     progress_bar.set(0)
@@ -264,12 +396,19 @@ def finish_benchmark():
     btn_back_benchmark.configure(state="normal")
 
 
+def finish_integer():
+    integer_progress_bar.stop()
+    integer_progress_bar.set(0)
+    btn_run_integer.configure(state="normal", text="START TEST", fg_color="#2196F3")
+    btn_back_integer.configure(state="normal")
+
+
 def start_benchmark():
     global is_running
 
     selected_with_labels = [(size_mb, label)
-                           for (size_mb, label), var in zip(sizes_config, checkboxes.values())
-                           if var.get()]
+                            for (size_mb, label), var in zip(sizes_config, checkboxes.values())
+                            if var.get()]
 
     if not selected_with_labels:
         log_benchmark("\nWARNING: Please select at least one block size!\n")
@@ -280,15 +419,32 @@ def start_benchmark():
 
     is_running = True
 
-    # UI updates
     btn_run_benchmark.configure(state="disabled", text="RUNNING...", fg_color="#808080")
     btn_back_benchmark.configure(state="disabled")
     progress_bar.set(0)
     progress_bar.start()
     clear_benchmark_log()
 
-    # Run in separate thread
     thread = threading.Thread(target=run_benchmark_thread, args=(selected_with_labels,))
+    thread.daemon = True
+    thread.start()
+
+
+def start_integer():
+    global is_integer_running
+
+    if is_integer_running:
+        return
+
+    is_integer_running = True
+
+    btn_run_integer.configure(state="disabled", text="RUNNING...", fg_color="#808080")
+    btn_back_integer.configure(state="disabled")
+    integer_progress_bar.set(0)
+    integer_progress_bar.start()
+    clear_integer_log()
+
+    thread = threading.Thread(target=run_integer_thread)
     thread.daemon = True
     thread.start()
 
@@ -300,9 +456,12 @@ btn_cache.configure(command=lambda: show_info(dll.getCacheInfo, "Cache Memory In
 btn_paging.configure(command=lambda: show_info(dll.getMemPagingInfo, "Memory Paging Information"))
 btn_ram.configure(command=lambda: show_info(dll.getRAMInfo, "RAM Information"))
 btn_benchmark.configure(command=show_benchmark)
+btn_integer.configure(command=show_integer)
 
 btn_back_info.configure(command=go_back_from_info)
 btn_back_benchmark.configure(command=go_back_from_benchmark)
+btn_back_integer.configure(command=go_back_from_integer)
 btn_run_benchmark.configure(command=start_benchmark)
+btn_run_integer.configure(command=start_integer)
 
 app.mainloop()
