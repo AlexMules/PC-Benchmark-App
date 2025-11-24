@@ -27,16 +27,16 @@ private:
     const int NUM_SAMPLES = 202;
     const int WARMUP_PASSES = 5;
 
-    const double OPS_PER_ELEMENT = 11.0;
+    const double OPS_PER_ELEMENT = 13.0;
     /*
-     * OPS_PER_ELEMENT = 11 operations:
-     *   3 ADDs
-     *   1 MUL
-     *   1 SUB
-     *   3 XORs
-     *   1 NOT
-     *   1 ROL
-     *   1 AND
+     * OPS_PER_ELEMENT = 13 operations:
+     *  3 ADDs
+     *  1 MUL
+     *  1 SUB
+     *  4 XORs
+     *  1 NOT
+     *  1 ROL
+     *  2 ANDs
      */
 
     const double OPS_PER_PASS = static_cast<double>(BUFFER_SIZE) * OPS_PER_ELEMENT
@@ -76,7 +76,7 @@ private:
 
                 int r1 = (val_1 + val_add) * val_mul - static_cast<int>(it);
                 int r2 = ~(val_1 ^ val_xor);
-                int r3 = RotateLeft(val_2, val_1 & 0x1F);
+                int r3 = RotateLeft(val_2, val_1);
                 int r4 = (val_2 + static_cast<int>(i)) & 0xFFFF;
 
                 int result = r1 ^ r2 ^ r3 ^ r4;
@@ -143,11 +143,10 @@ struct BenchmarkResult {
 extern "C" {
     // Returns full benchmark results
     __declspec(dllexport) BenchmarkResult runIntegerBenchmark() {
-        auto startTime = chrono::steady_clock::now();
-
         IntegerOperationsBenchmark benchmark;
-        double median_gops = benchmark.runBenchmark();
 
+        auto startTime = chrono::steady_clock::now();
+        double median_gops = benchmark.runBenchmark();
         auto endTime = chrono::steady_clock::now();
         double duration = chrono::duration<double>(endTime - startTime).count();
 
@@ -157,10 +156,5 @@ extern "C" {
         result.duration = duration;
 
         return result;
-    }
-
-    __declspec(dllexport) double runIntegerBenchmarkSimple() {
-        IntegerOperationsBenchmark benchmark;
-        return benchmark.runBenchmark();
     }
 }
