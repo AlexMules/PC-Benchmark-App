@@ -24,7 +24,7 @@ class IntegerOperationsBenchmark {
 private:
     const size_t BUFFER_SIZE = 1024;
     const size_t ITERATIONS_PER_PASS = 200000;
-    const int NUM_SAMPLES = 202;
+    const int NUM_SAMPLES = 201;
     const int WARMUP_PASSES = 5;
 
     const double OPS_PER_ELEMENT = 13.0;
