@@ -80,7 +80,7 @@ ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
 app.title("PC Benchmark App")
-app.geometry("1000x700") # Am marit putin inaltimea pentru a incapea noul buton
+app.geometry("1000x650")
 
 icon_path = "logo.ico"
 try:
@@ -91,48 +91,74 @@ except Exception as e:
 
 text_font = ctk.CTkFont(family="Consolas", size=14)
 
-# ========== MAIN MENU FRAME ==========
+# ==========================================
+#  MAIN MENU FRAME (OPTIMIZAT: CENTRAT PERFECT)
+# ==========================================
 main_frame = ctk.CTkFrame(app)
 main_frame.pack(fill="both", expand=True)
 
-# Definim culorile pentru meniul principal (Uniforme: Albastru)
+# Definim culorile
 MAIN_BTN_COLOR = "#2196F3"
 MAIN_BTN_HOVER = "#1976D2"
 
-btn_cpu = ctk.CTkButton(main_frame, text="CPU Info", width=200, height=40,
+# --- CONTAINER PRINCIPAL PENTRU CENTRARE ---
+# Acesta va sta exact in mijlocul ecranului (vertical si orizontal)
+# si va tine cele doua coloane aproape una de alta.
+menu_container = ctk.CTkFrame(main_frame, fg_color="transparent")
+menu_container.place(relx=0.5, rely=0.5, anchor="center")
+
+# --- COLOANA STANGA (Hardware) ---
+# padx redus pentru a le tine aproape
+left_frame = ctk.CTkFrame(menu_container, fg_color="transparent")
+left_frame.pack(side="left", padx=50, pady=20, anchor="n")
+
+ctk.CTkLabel(left_frame, text="Hardware Information", font=("Arial", 20, "bold")).pack(pady=(0, 20))
+
+btn_cpu = ctk.CTkButton(left_frame, text="CPU Info", width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
-btn_cache = ctk.CTkButton(main_frame, text="Cache Memory Info", width=200, height=40,
-                          fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
-btn_paging = ctk.CTkButton(main_frame, text="Paging Info", width=200, height=40,
-                           fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
-btn_ram = ctk.CTkButton(main_frame, text="RAM Info", width=200, height=40,
-                        fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
-btn_benchmark = ctk.CTkButton(main_frame, text="Test Data Transfer Speed",
-                              width=200, height=40,
-                              fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
-btn_integer = ctk.CTkButton(main_frame, text="Test Integer Operations",
-                            width=200, height=40,
-                            fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
-# (NOU - FPU) Buton Meniu
-btn_fpu = ctk.CTkButton(main_frame, text="Test Floating Point Operations",
-                            width=200, height=40,
-                            fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
-
 btn_cpu.pack(pady=10)
-btn_cache.pack(pady=10)
-btn_paging.pack(pady=10)
-btn_ram.pack(pady=10)
-btn_benchmark.pack(pady=10)
-btn_integer.pack(pady=10)
-btn_fpu.pack(pady=10) # (NOU - FPU) Pack buton
 
-# ========== INFO FRAME (pentru CPU, Cache, etc) ==========
+btn_cache = ctk.CTkButton(left_frame, text="Cache Info", width=250, height=45,
+                          fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+btn_cache.pack(pady=10)
+
+btn_paging = ctk.CTkButton(left_frame, text="Paging Info", width=250, height=45,
+                           fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+btn_paging.pack(pady=10)
+
+btn_ram = ctk.CTkButton(left_frame, text="RAM Info", width=250, height=45,
+                        fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+btn_ram.pack(pady=10)
+
+
+# --- COLOANA DREAPTA (Benchmarks) ---
+# padx redus pentru a le tine aproape
+right_frame = ctk.CTkFrame(menu_container, fg_color="transparent")
+right_frame.pack(side="left", padx=50, pady=20, anchor="n")
+
+ctk.CTkLabel(right_frame, text="Performance Benchmarks", font=("Arial", 20, "bold")).pack(pady=(0, 20))
+
+btn_benchmark = ctk.CTkButton(right_frame, text="Test Data Transfer Speed",
+                              width=250, height=45,
+                              fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+btn_benchmark.pack(pady=10)
+
+btn_integer = ctk.CTkButton(right_frame, text="Test Integer Operations",
+                            width=250, height=45,
+                            fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+btn_integer.pack(pady=10)
+
+btn_fpu = ctk.CTkButton(right_frame, text="Test Floating Point (FPU)",
+                            width=250, height=45,
+                            fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+btn_fpu.pack(pady=10)
+
+
+# ==========================================
+# RESTUL INTERFETEI (NESCHIMBAT)
+# ==========================================
+
+# ========== INFO FRAME ==========
 info_frame = ctk.CTkFrame(app)
 
 info_label = ctk.CTkLabel(info_frame, text="", font=ctk.CTkFont(family="Consolas", size=16))
@@ -145,7 +171,7 @@ text_widget.configure(state="disabled")
 btn_back_info = ctk.CTkButton(info_frame, text="Back", width=100)
 btn_back_info.pack(pady=10)
 
-# ========== BENCHMARK FRAME (Data Transfer) ==========
+# ========== BENCHMARK FRAME ==========
 benchmark_frame = ctk.CTkFrame(app)
 
 benchmark_title = ctk.CTkLabel(benchmark_frame,
@@ -274,7 +300,7 @@ btn_back_integer.pack(pady=10)
 fpu_frame = ctk.CTkFrame(app)
 
 fpu_title = ctk.CTkLabel(fpu_frame,
-                             text="Floating Point Operations Benchmark",
+                             text="Floating Point (FPU) Benchmark",
                              font=ctk.CTkFont(family="Arial", size=20, weight="bold"))
 fpu_title.pack(pady=20)
 
@@ -292,7 +318,7 @@ fpu_duration_label.pack(pady=5)
 
 fpu_info_label = ctk.CTkLabel(fpu_frame,
                                   text="This benchmark measures the speed of floating point operations using\n"
-                                       "Mandelbrot Fractal Calculation",
+                                       "Mandelbrot fractal calculations",
                                   font=ctk.CTkFont(family="Arial", size=12))
 fpu_info_label.pack(pady=10)
 
@@ -393,7 +419,7 @@ def show_fpu():
 
     fpu_text.configure(state="normal")
     fpu_text.delete("0.0", "end")
-    fpu_text.insert("0.0", "Ready to run Floating Point Operations Benchmark.\n")
+    fpu_text.insert("0.0", "Ready to run Floating Point (Mandelbrot) Benchmark.\n")
     fpu_text.insert("end", "Click 'START TEST' to begin...\n")
     fpu_text.configure(state="disabled")
 
@@ -535,7 +561,7 @@ def run_fpu_thread():
         result = fpu_dll.runMandelbrotBenchmark()
 
         log_fpu("-" * 50 + "\n")
-        log_fpu("                 RESULTS\n")
+        log_fpu("                 RESULTS (FPU)\n")
         log_fpu("-" * 50 + "\n\n")
 
         log_fpu(f"  Score:        {result.gflops:.3f} GFLOPS\n")
