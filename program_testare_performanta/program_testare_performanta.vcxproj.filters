@@ -24,6 +24,9 @@
     <ClCompile Include="Integer_operations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Floating_point_operations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Data_transfer_speed.hpp">

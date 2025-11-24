@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Data_transfer_speed.cpp" />
+    <ClCompile Include="Floating_point_operations.cpp" />
     <ClCompile Include="Integer_operations.cpp" />
     <ClCompile Include="System_info.cpp" />
   </ItemGroup>
