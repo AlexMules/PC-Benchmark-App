@@ -118,7 +118,7 @@ btn_cpu = ctk.CTkButton(left_frame, text="CPU Info", width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_cpu.pack(pady=10)
 
-btn_cache = ctk.CTkButton(left_frame, text="Cache Info", width=250, height=45,
+btn_cache = ctk.CTkButton(left_frame, text="Cache Memory Info", width=250, height=45,
                           fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_cache.pack(pady=10)
 
@@ -148,7 +148,7 @@ btn_integer = ctk.CTkButton(right_frame, text="Test Integer Operations",
                             fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_integer.pack(pady=10)
 
-btn_fpu = ctk.CTkButton(right_frame, text="Test Floating Point (FPU)",
+btn_fpu = ctk.CTkButton(right_frame, text="Test Floating Point Operations",
                             width=250, height=45,
                             fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_fpu.pack(pady=10)
@@ -300,7 +300,7 @@ btn_back_integer.pack(pady=10)
 fpu_frame = ctk.CTkFrame(app)
 
 fpu_title = ctk.CTkLabel(fpu_frame,
-                             text="Floating Point (FPU) Benchmark",
+                             text="Floating Point Operations Benchmark",
                              font=ctk.CTkFont(family="Arial", size=20, weight="bold"))
 fpu_title.pack(pady=20)
 
@@ -419,7 +419,7 @@ def show_fpu():
 
     fpu_text.configure(state="normal")
     fpu_text.delete("0.0", "end")
-    fpu_text.insert("0.0", "Ready to run Floating Point (Mandelbrot) Benchmark.\n")
+    fpu_text.insert("0.0", "Ready to run Floating Point Operations Benchmark.\n")
     fpu_text.insert("end", "Click 'START TEST' to begin...\n")
     fpu_text.configure(state="disabled")
 
