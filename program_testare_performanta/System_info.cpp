@@ -285,43 +285,67 @@ string ws2s(const wstring& wstr) {
 }
 
 void get_RAM_Info() {
-	HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-	if (FAILED(hres)) {
+	HRESULT hres;
+	// Flag pentru a sti daca noi am initializat COM si daca avem dreptul sa il inchidem
+	bool bCleanupCOM = false;
+
+	// 1. Initialize COM
+	hres = CoInitializeEx(0, COINIT_MULTITHREADED);
+
+	if (SUCCEEDED(hres)) {
+		bCleanupCOM = true; // Noi l-am pornit, noi il oprim
+	}
+	else if (hres == RPC_E_CHANGED_MODE) {
+		// E deja pornit (probabil de alta functie), continuam dar NU dam Uninitialize la final
+		bCleanupCOM = false;
+	}
+	else {
+		// Eroare critica
 		return;
 	}
 
+	// 2. Initialize Security
 	hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT,
 		RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-	if (FAILED(hres)) { 
-		CoUninitialize(); 
-		return; 
+
+	// MODIFICARE CRITICA AICI: Ignoram eroarea RPC_E_TOO_LATE (inseamna ca securitatea e deja setata)
+	if (FAILED(hres) && hres != RPC_E_TOO_LATE) {
+		if (bCleanupCOM) CoUninitialize();
+		return;
 	}
 
+	// 3. Create WMI Locator
 	IWbemLocator* pLoc = nullptr;
 	hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
 		IID_IWbemLocator, (LPVOID*)&pLoc);
-	if (FAILED(hres)) { 
-		CoUninitialize(); 
-		return; 
+
+	if (FAILED(hres)) {
+		if (bCleanupCOM) CoUninitialize();
+		return;
 	}
 
+	// 4. Connect to WMI
 	IWbemServices* pSvc = nullptr;
 	hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc);
-	if (FAILED(hres)) { 
-		pLoc->Release(); 
-		CoUninitialize(); 
-		return; 
+
+	if (FAILED(hres)) {
+		pLoc->Release();
+		if (bCleanupCOM) CoUninitialize();
+		return;
 	}
 
+	// 5. Set Security Levels
 	hres = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL,
 		RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE);
-	if (FAILED(hres)) { 
-		pSvc->Release(); 
-		pLoc->Release(); 
-		CoUninitialize(); 
-		return; 
+
+	if (FAILED(hres)) {
+		pSvc->Release();
+		pLoc->Release();
+		if (bCleanupCOM) CoUninitialize();
+		return;
 	}
 
+	// --- QUERY PENTRU MODULE ---
 	IEnumWbemClassObject* pEnumerator = nullptr;
 	hres = pSvc->ExecQuery(bstr_t("WQL"),
 		bstr_t("SELECT Capacity, ConfiguredClockSpeed, Speed, Manufacturer, "
@@ -329,11 +353,12 @@ void get_RAM_Info() {
 			"SerialNumber, PartNumber, SMBIOSMemoryType, DataWidth, TotalWidth "
 			"FROM Win32_PhysicalMemory"),
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL, &pEnumerator);
-	if (FAILED(hres)) { 
-		pSvc->Release(); 
-		pLoc->Release(); 
-		CoUninitialize(); 
-		return; 
+
+	if (FAILED(hres)) {
+		pSvc->Release();
+		pLoc->Release();
+		if (bCleanupCOM) CoUninitialize();
+		return;
 	}
 
 	IWbemClassObject* pclsObj = nullptr;
@@ -378,7 +403,7 @@ void get_RAM_Info() {
 		cout << "Bank Label: " << ws2s(bankLabel) << "\n";
 		VariantClear(&vt);
 
-		// Channel
+		// Channel detection logic
 		size_t pos = bankLabel.find(L"CHANNEL ");
 		if (pos != wstring::npos && bankLabel.size() > pos + 8) {
 			wchar_t ch = bankLabel[pos + 8];
@@ -389,9 +414,9 @@ void get_RAM_Info() {
 		pclsObj->Get(L"FormFactor", 0, &vt, 0, 0);
 		string formFactorStr;
 		switch (vt.uintVal) {
-			case 8: formFactorStr = "DIMM"; break;
-			case 12: formFactorStr = "SODIMM"; break;
-			default: formFactorStr = "Other"; break;
+		case 8: formFactorStr = "DIMM"; break;
+		case 12: formFactorStr = "SODIMM"; break;
+		default: formFactorStr = "Other"; break;
 		}
 		cout << "Form Factor: " << formFactorStr << "\n";
 		VariantClear(&vt);
@@ -417,14 +442,14 @@ void get_RAM_Info() {
 		unsigned int smType = (vt.vt != VT_EMPTY ? vt.uintVal : 0);
 		string memTypeStr;
 		switch (smType) {
-			case 20: memTypeStr = "DDR"; break;
-			case 21: memTypeStr = "DDR2"; break;
-			case 22: memTypeStr = "DDR2 FB-DIMM"; break;
-			case 24: memTypeStr = "DDR3"; break;
-			case 26: memTypeStr = "DDR4"; break;
-			case 30: memTypeStr = "DDR5"; break; // SMBIOS < 3.5
-			case 34: memTypeStr = "DDR5"; break; // SMBIOS >= 3.5
-			default: memTypeStr = "Unknown"; break;
+		case 20: memTypeStr = "DDR"; break;
+		case 21: memTypeStr = "DDR2"; break;
+		case 22: memTypeStr = "DDR2 FB-DIMM"; break;
+		case 24: memTypeStr = "DDR3"; break;
+		case 26: memTypeStr = "DDR4"; break;
+		case 30: memTypeStr = "DDR5"; break;
+		case 34: memTypeStr = "DDR5"; break;
+		default: memTypeStr = "Unknown"; break;
 		}
 		cout << "Type: " << memTypeStr << "\n";
 		VariantClear(&vt);
@@ -447,20 +472,25 @@ void get_RAM_Info() {
 	}
 	pEnumerator->Release();
 
+	// --- QUERY PENTRU SLOTURI ---
 	pEnumerator = nullptr;
 	int totalSlots = 0;
-	VARIANT vt;
 	hres = pSvc->ExecQuery(bstr_t("WQL"),
 		bstr_t("SELECT MemoryDevices FROM Win32_PhysicalMemoryArray"),
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL, &pEnumerator);
-	if (SUCCEEDED(hres) && pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn) == S_OK) {
-		VariantInit(&vt);
-		pclsObj->Get(L"MemoryDevices", 0, &vt, 0, 0);
-		totalSlots = (vt.vt != VT_EMPTY ? vt.uintVal : 0);
-		pclsObj->Release();
-		VariantClear(&vt);
+
+	if (SUCCEEDED(hres) && pEnumerator) {
+		// Aici trebuie sa verificam next si sa alocam obiectul
+		if (pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn) == S_OK) {
+			VARIANT vt;
+			VariantInit(&vt);
+			pclsObj->Get(L"MemoryDevices", 0, &vt, 0, 0);
+			totalSlots = (vt.vt != VT_EMPTY ? vt.uintVal : 0);
+			pclsObj->Release();
+			VariantClear(&vt);
+		}
+		pEnumerator->Release();
 	}
-	pEnumerator->Release();
 
 	cout << "RAM Slots: Total = " << totalSlots
 		<< ", Used = " << moduleIndex
@@ -472,16 +502,20 @@ void get_RAM_Info() {
 	// Channel Configuration
 	cout << "Channel Configuration: ";
 	switch (channelSet.size()) {
-		case 1: cout << "Single-channel\n"; break;
-		case 2: cout << "Dual-channel\n"; break;
-		case 3: cout << "Triple-channel\n"; break;
-		case 4: cout << "Quad-channel\n"; break;
-		default: cout << channelSet.size() << " channels\n"; break;
+	case 1: cout << "Single-channel\n"; break;
+	case 2: cout << "Dual-channel\n"; break;
+	case 3: cout << "Triple-channel\n"; break;
+	case 4: cout << "Quad-channel\n"; break;
+	default: cout << channelSet.size() << " channels\n"; break;
 	}
 
 	pSvc->Release();
 	pLoc->Release();
-	CoUninitialize();
+
+	// Inchidem COM doar daca noi l-am deschis
+	if (bCleanupCOM) {
+		CoUninitialize();
+	}
 }
 
 

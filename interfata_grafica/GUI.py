@@ -10,7 +10,7 @@ import threading
 
 # Load DLL-uri
 # Asigura-te ca fisierele .dll sunt in acelasi folder cu acest script
-dll_path = os.path.join(os.path.dirname(__file__), "program_testare_performanta.dll")
+dll_path = os.path.join(os.path.dirname(__file__), "System_info.dll")
 try:
     dll = ctypes.CDLL(dll_path)
     # Setup pentru DLL info
@@ -19,7 +19,7 @@ try:
     dll.getMemPagingInfo.restype = ctypes.c_char_p
     dll.getRAMInfo.restype = ctypes.c_char_p
 except OSError:
-    print("Error loading program_testare_performanta.dll")
+    print("Error loading System_info.dll")
 
 benchmark_dll_path = os.path.join(os.path.dirname(__file__), "Data_transfer_speed.dll")
 try:
