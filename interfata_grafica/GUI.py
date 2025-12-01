@@ -5,9 +5,19 @@ import os
 import threading
 import time
 import datetime
+import sys
 
 
-dll_path = os.path.join(os.path.dirname(__file__), "System_info.dll")
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(base_path, relative_path)
+
+
+dll_path = resource_path("System_info.dll")
 try:
     dll = ctypes.CDLL(dll_path)
     dll.getCPUInfo.restype = c_char_p
@@ -15,9 +25,9 @@ try:
     dll.getMemPagingInfo.restype = c_char_p
     dll.getRAMInfo.restype = c_char_p
 except OSError:
-    print("Error loading System_info.dll")
+    print(f"Error loading System_info.dll from {dll_path}")
 
-benchmark_dll_path = os.path.join(os.path.dirname(__file__), "Data_transfer_speed.dll")
+benchmark_dll_path = resource_path("Data_transfer_speed.dll")
 try:
     benchmark_dll = ctypes.CDLL(benchmark_dll_path)
 
@@ -33,9 +43,9 @@ try:
     benchmark_dll.RunBenchmark.argtypes = [c_size_t, ctypes.POINTER(BenchmarkResult)]
     benchmark_dll.RunBenchmark.restype = None
 except OSError:
-    print("Error loading Data_transfer_speed.dll")
+    print(f"Error loading Data_transfer_speed.dll from {benchmark_dll_path}")
 
-integer_dll_path = os.path.join(os.path.dirname(__file__), "Integer_operations.dll")
+integer_dll_path = resource_path("Integer_operations.dll")
 try:
     integer_dll = ctypes.CDLL(integer_dll_path)
 
@@ -49,9 +59,9 @@ try:
     integer_dll.runIntegerBenchmark.restype = IntegerBenchmarkResult
     integer_dll.runIntegerBenchmark.argtypes = []
 except OSError:
-    print("Error loading Integer_operations.dll")
+    print(f"Error loading Integer_operations.dll from {integer_dll_path}")
 
-fpu_dll_path = os.path.join(os.path.dirname(__file__), "Floating_point_operations.dll")
+fpu_dll_path = resource_path("Floating_point_operations.dll")
 try:
     fpu_dll = ctypes.CDLL(fpu_dll_path)
 
@@ -65,7 +75,7 @@ try:
     fpu_dll.runMandelbrotBenchmark.restype = FPUBenchmarkResult
     fpu_dll.runMandelbrotBenchmark.argtypes = []
 except OSError:
-    print("Error loading Floating_point_operations.dll")
+    print(f"Error loading Floating_point_operations.dll from {fpu_dll_path}")
 
 
 
@@ -76,10 +86,12 @@ app = ctk.CTk()
 app.title("PC Benchmark App")
 app.geometry("1000x750")
 
-icon_path = "logo.ico"
+icon_path = resource_path("logo.ico")
 try:
     if os.path.exists(icon_path):
         app.iconbitmap(icon_path)
+    else:
+        print(f"Icon not found at: {icon_path}")
 except Exception as e:
     print(f"Error loading icon: {e}")
 
