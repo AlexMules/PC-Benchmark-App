@@ -6,19 +6,14 @@ import threading
 import time
 import datetime
 
-# ==========================================
-# 1. LOAD DLL-uri
-# ==========================================
 
-# Load DLL-uri
 dll_path = os.path.join(os.path.dirname(__file__), "System_info.dll")
 try:
     dll = ctypes.CDLL(dll_path)
-    # Setup pentru DLL info
-    dll.getCPUInfo.restype = ctypes.c_char_p
-    dll.getCacheInfo.restype = ctypes.c_char_p
-    dll.getMemPagingInfo.restype = ctypes.c_char_p
-    dll.getRAMInfo.restype = ctypes.c_char_p
+    dll.getCPUInfo.restype = c_char_p
+    dll.getCacheInfo.restype = c_char_p
+    dll.getMemPagingInfo.restype = c_char_p
+    dll.getRAMInfo.restype = c_char_p
 except OSError:
     print("Error loading System_info.dll")
 
@@ -26,8 +21,6 @@ benchmark_dll_path = os.path.join(os.path.dirname(__file__), "Data_transfer_spee
 try:
     benchmark_dll = ctypes.CDLL(benchmark_dll_path)
 
-
-    # Setup pentru Benchmark DLL
     class BenchmarkResult(Structure):
         _fields_ = [
             ("sequential", c_double),
@@ -36,7 +29,6 @@ try:
             ("strided_results", c_double * 3),
             ("random", c_double)
         ]
-
 
     benchmark_dll.RunBenchmark.argtypes = [c_size_t, ctypes.POINTER(BenchmarkResult)]
     benchmark_dll.RunBenchmark.restype = None
@@ -47,8 +39,6 @@ integer_dll_path = os.path.join(os.path.dirname(__file__), "Integer_operations.d
 try:
     integer_dll = ctypes.CDLL(integer_dll_path)
 
-
-    # Setup pentru Integer Operations DLL
     class IntegerBenchmarkResult(Structure):
         _fields_ = [
             ("gops", c_double),
@@ -56,19 +46,15 @@ try:
             ("duration", c_double)
         ]
 
-
     integer_dll.runIntegerBenchmark.restype = IntegerBenchmarkResult
     integer_dll.runIntegerBenchmark.argtypes = []
 except OSError:
     print("Error loading Integer_operations.dll")
 
-# (NOU - FPU) Load Floating Point DLL
 fpu_dll_path = os.path.join(os.path.dirname(__file__), "Floating_point_operations.dll")
 try:
     fpu_dll = ctypes.CDLL(fpu_dll_path)
 
-
-    # Setup pentru FPU DLL
     class FPUBenchmarkResult(Structure):
         _fields_ = [
             ("gflops", c_double),
@@ -82,11 +68,8 @@ try:
 except OSError:
     print("Error loading Floating_point_operations.dll")
 
-# ==========================================
-# 2. UI SETUP
-# ==========================================
 
-# Theme setup
+
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
@@ -103,22 +86,15 @@ except Exception as e:
 
 text_font = ctk.CTkFont(family="Consolas", size=14)
 
-# ==========================================
-#  MAIN MENU FRAME (STRUCTURA CENTRATA)
-# ==========================================
 main_frame = ctk.CTkFrame(app)
 main_frame.pack(fill="both", expand=True)
 
-# Definim culorile pentru meniul principal
 MAIN_BTN_COLOR = "#2196F3"
 MAIN_BTN_HOVER = "#1976D2"
 
-# --- CONTAINER PRINCIPAL PENTRU CENTRARE ---
-# Acesta va tine cele doua coloane aproape una de alta, centrate pe ecran
 menu_container = ctk.CTkFrame(main_frame, fg_color="transparent")
 menu_container.place(relx=0.5, rely=0.45, anchor="center")
 
-# --- COLOANA STANGA (Hardware) ---
 left_frame = ctk.CTkFrame(menu_container, fg_color="transparent")
 left_frame.pack(side="left", padx=50, pady=20, anchor="n")
 
@@ -128,7 +104,6 @@ btn_cpu = ctk.CTkButton(left_frame, text="CPU Info", width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_cpu.pack(pady=10)
 
-# Aici am pastrat textul original "Cache Memory Info"
 btn_cache = ctk.CTkButton(left_frame, text="Cache Memory Info", width=250, height=45,
                           fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_cache.pack(pady=10)
@@ -141,7 +116,6 @@ btn_ram = ctk.CTkButton(left_frame, text="RAM Info", width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_ram.pack(pady=10)
 
-# --- COLOANA DREAPTA (Benchmarks) ---
 right_frame = ctk.CTkFrame(menu_container, fg_color="transparent")
 right_frame.pack(side="right", padx=50, pady=20, anchor="n")
 
@@ -157,14 +131,11 @@ btn_integer = ctk.CTkButton(right_frame, text="Test Integer Operations",
                             fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_integer.pack(pady=10)
 
-# Aici am pastrat textul original "Test Floating Point Operations"
 btn_fpu = ctk.CTkButton(right_frame, text="Test Floating Point Operations",
                         width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_fpu.pack(pady=10)
 
-# --- FOOTER FRAME (BUTON RUN ALL) ---
-# Adaugat jos, separat de coloane
 footer_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
 footer_frame.pack(side="bottom", pady=40)
 
@@ -177,11 +148,6 @@ btn_run_all.pack()
 status_label = ctk.CTkLabel(footer_frame, text="", font=("Arial", 12), text_color="white")
 status_label.pack(pady=5)
 
-# ==========================================
-# RESTUL INTERFETEI (NESCHIMBAT)
-# ==========================================
-
-# ========== INFO FRAME ==========
 info_frame = ctk.CTkFrame(app)
 
 info_label = ctk.CTkLabel(info_frame, text="", font=ctk.CTkFont(family="Consolas", size=16))
@@ -194,7 +160,6 @@ text_widget.configure(state="disabled")
 btn_back_info = ctk.CTkButton(info_frame, text="Back", width=100)
 btn_back_info.pack(pady=10)
 
-# ========== BENCHMARK FRAME ==========
 benchmark_frame = ctk.CTkFrame(app)
 
 benchmark_title = ctk.CTkLabel(benchmark_frame,
@@ -239,7 +204,6 @@ for i, (size_mb, label) in enumerate(sizes_config):
     cb.grid(row=0, column=i, padx=15, pady=5)
     checkboxes[size_mb] = var
 
-# BUTON START VERDE (#4CAF50)
 btn_run_benchmark = ctk.CTkButton(benchmark_frame,
                                   text="START TEST",
                                   width=200, height=50,
@@ -266,7 +230,6 @@ btn_back_benchmark = ctk.CTkButton(benchmark_frame, text="Back to Menu",
                                    width=150, height=35)
 btn_back_benchmark.pack(pady=10)
 
-# ========== INTEGER OPERATIONS FRAME ==========
 integer_frame = ctk.CTkFrame(app)
 
 integer_title = ctk.CTkLabel(integer_frame,
@@ -292,7 +255,6 @@ integer_info_label = ctk.CTkLabel(integer_frame,
                                   font=ctk.CTkFont(family="Arial", size=12))
 integer_info_label.pack(pady=10)
 
-# BUTON START VERDE (#4CAF50) - MODIFICAT
 btn_run_integer = ctk.CTkButton(integer_frame,
                                 text="START TEST",
                                 width=200, height=50,
@@ -319,7 +281,6 @@ btn_back_integer = ctk.CTkButton(integer_frame, text="Back to Menu",
                                  width=150, height=35)
 btn_back_integer.pack(pady=10)
 
-# ========== (NOU - FPU) FLOATING POINT FRAME ==========
 fpu_frame = ctk.CTkFrame(app)
 
 fpu_title = ctk.CTkLabel(fpu_frame,
@@ -371,16 +332,13 @@ btn_back_fpu = ctk.CTkButton(fpu_frame, text="Back to Menu",
                              width=150, height=35)
 btn_back_fpu.pack(pady=10)
 
-# ========== GLOBAL STATE ==========
+
 is_running = False
 is_integer_running = False
 is_fpu_running = False
-is_full_report_running = False  # (NOU) State pentru raport complet
+is_full_report_running = False
 
-
-# ========== FUNCTIONS ==========
 def toggle_menu_buttons(state):
-    """Activeaza sau dezactiveaza toate butoanele din meniu"""
     btn_cpu.configure(state=state)
     btn_cache.configure(state=state)
     btn_paging.configure(state=state)
@@ -446,7 +404,6 @@ def go_back_from_integer():
         main_frame.pack(fill="both", expand=True)
 
 
-# (NOU - FPU) Functii UI FPU
 def show_fpu():
     main_frame.pack_forget()
     fpu_frame.pack(fill="both", expand=True)
@@ -485,7 +442,6 @@ def log_integer(message):
     app.after(0, _log)
 
 
-# (NOU - FPU) Functie log FPU
 def log_fpu(message):
     def _log():
         fpu_text.configure(state="normal")
@@ -508,7 +464,6 @@ def clear_integer_log():
     integer_text.configure(state="disabled")
 
 
-# (NOU - FPU) Clear Log
 def clear_fpu_log():
     fpu_text.configure(state="normal")
     fpu_text.delete("0.0", "end")
@@ -588,14 +543,12 @@ def run_integer_thread():
         app.after(0, finish_integer)
 
 
-# (NOU - FPU) Thread FPU
 def run_fpu_thread():
     global is_fpu_running
 
     try:
         log_fpu("Please wait, this may take several minutes...\n\n")
 
-        # Run benchmark
         result = fpu_dll.runMandelbrotBenchmark()
 
         log_fpu("-" * 50 + "\n")
@@ -632,12 +585,10 @@ def finish_benchmark():
 def finish_integer():
     integer_progress_bar.stop()
     integer_progress_bar.set(0)
-    # RESETEAZA CULOAREA LA VERDE (#4CAF50) DUPA TERMINARE
     btn_run_integer.configure(state="normal", text="START TEST", fg_color="#4CAF50")
     btn_back_integer.configure(state="normal")
 
 
-# (NOU - FPU) Finish FPU
 def finish_fpu():
     fpu_progress_bar.stop()
     fpu_progress_bar.set(0)
@@ -691,7 +642,6 @@ def start_integer():
     thread.start()
 
 
-# (NOU - FPU) Start FPU
 def start_fpu():
     global is_fpu_running
 
@@ -711,10 +661,6 @@ def start_fpu():
     thread.start()
 
 
-# ==========================================
-#  4. FULL DIAGNOSTIC LOGIC (BUTON NOU)
-# ==========================================
-
 def run_full_report_thread():
     global is_full_report_running
     report = []
@@ -724,7 +670,7 @@ def run_full_report_thread():
         app.after(0, lambda: status_label.configure(text=msg))
 
     try:
-        # 1. Info Hardware
+        # hardware information
         update_status("Gathering Hardware Information...")
         report.append("=" * 60)
         report.append(f"PC BENCHMARK REPORT - {timestamp}")
@@ -741,7 +687,7 @@ def run_full_report_thread():
             report.append(dll.getRAMInfo().decode())
             report.append("-" * 60 + "\n")
 
-        # 2. Integer Tests
+        # integer operations tests
         update_status("Running Integer Operations Benchmark...")
         report.append("--- 5. INTEGER OPERATIONS BENCHMARK ---")
         int_res = integer_dll.runIntegerBenchmark()
@@ -752,7 +698,7 @@ def run_full_report_thread():
 
         time.sleep(3)
 
-        # 3. FPU Tests
+        # floating point operations tests
         update_status("Running Floating Point Operations Benchmark...")
         report.append("--- 6. FLOATING POINT OPERATIONS BENCHMARK ---")
         fpu_res = fpu_dll.runMandelbrotBenchmark()
@@ -763,13 +709,11 @@ def run_full_report_thread():
 
         time.sleep(3)
 
-        # 4. Data Transfer (TOATE DIMENSIUNILE)
+        # data transfer tests
         update_status("Running Data Transfer Tests...")
         report.append("--- 7. DATA TRANSFER SPEED ---")
 
-        # Folosim lista completa din configurare
         all_sizes_to_test = sizes_config
-
         for size_mb, label in all_sizes_to_test:
             update_status(f"Testing Memory Block Transfer: {label}...")
             report.append(f"[ Block Size: {label} ]")
@@ -786,7 +730,7 @@ def run_full_report_thread():
         report.append("=" * 60)
         report.append("END OF REPORT")
 
-        # Salvare
+        # salvare fisier
         with open("benchmark_report.txt", "w") as f:
             f.write("\n".join(report))
 
@@ -818,27 +762,23 @@ def start_full_report():
     thread.start()
 
 
-# ==========================================
-# 5. BUTTON COMMANDS
-# ==========================================
-
+# button commands bindings
 btn_cpu.configure(command=lambda: show_info(dll.getCPUInfo, "CPU Information"))
 btn_cache.configure(command=lambda: show_info(dll.getCacheInfo, "Cache Memory Information"))
 btn_paging.configure(command=lambda: show_info(dll.getMemPagingInfo, "Memory Paging Information"))
 btn_ram.configure(command=lambda: show_info(dll.getRAMInfo, "RAM Information"))
 btn_benchmark.configure(command=show_benchmark)
 btn_integer.configure(command=show_integer)
-btn_fpu.configure(command=show_fpu)  # (NOU - FPU) Command Link
+btn_fpu.configure(command=show_fpu)
 
 btn_back_info.configure(command=go_back_from_info)
 btn_back_benchmark.configure(command=go_back_from_benchmark)
 btn_back_integer.configure(command=go_back_from_integer)
-btn_back_fpu.configure(command=go_back_from_fpu)  # (NOU - FPU) Back Link
+btn_back_fpu.configure(command=go_back_from_fpu)
 
 btn_run_benchmark.configure(command=start_benchmark)
 btn_run_integer.configure(command=start_integer)
-btn_run_fpu.configure(command=start_fpu)  # (NOU - FPU) Start Link
-
-btn_run_all.configure(command=start_full_report)  # (NOU) Full report link
+btn_run_fpu.configure(command=start_fpu)
+btn_run_all.configure(command=start_full_report)
 
 app.mainloop()
