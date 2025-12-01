@@ -1,10 +1,6 @@
 #pragma once
 
-#ifdef BENCHMARKDLL_EXPORTS
 #define BENCHMARK __declspec(dllexport)
-#else
-#define BENCHMARK __declspec(dllimport)
-#endif
 
 #include <cstddef>
 
