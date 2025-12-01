@@ -229,7 +229,7 @@ sizes_config = [
     (16, "16 MB"),
     (128, "128 MB"),
     (512, "512 MB"),
-    (1024, "1024 MB")
+    (1024, "1 GB")
 ]
 
 for i, (size_mb, label) in enumerate(sizes_config):
@@ -754,7 +754,7 @@ def run_full_report_thread():
 
         # 3. FPU Tests
         update_status("Running Floating Point Operations Benchmark...")
-        report.append("--- 6. FLOATING POINT BENCHMARK ---")
+        report.append("--- 6. FLOATING POINT OPERATIONS BENCHMARK ---")
         fpu_res = fpu_dll.runMandelbrotBenchmark()
         report.append(f"Score:        {fpu_res.gflops:.3f} GFLOPS")
         report.append(f"Latency:      {fpu_res.latency_ns:.4f} ns/op")
