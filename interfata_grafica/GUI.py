@@ -1,15 +1,16 @@
 import ctypes
-from ctypes import Structure, c_double, c_int, c_size_t
+from ctypes import Structure, c_double, c_int, c_size_t, c_char_p
 import customtkinter as ctk
 import os
 import threading
+import time
+import datetime
 
 # ==========================================
 # 1. LOAD DLL-uri
 # ==========================================
 
 # Load DLL-uri
-# Asigura-te ca fisierele .dll sunt in acelasi folder cu acest script
 dll_path = os.path.join(os.path.dirname(__file__), "System_info.dll")
 try:
     dll = ctypes.CDLL(dll_path)
@@ -24,6 +25,8 @@ except OSError:
 benchmark_dll_path = os.path.join(os.path.dirname(__file__), "Data_transfer_speed.dll")
 try:
     benchmark_dll = ctypes.CDLL(benchmark_dll_path)
+
+
     # Setup pentru Benchmark DLL
     class BenchmarkResult(Structure):
         _fields_ = [
@@ -33,6 +36,8 @@ try:
             ("strided_results", c_double * 3),
             ("random", c_double)
         ]
+
+
     benchmark_dll.RunBenchmark.argtypes = [c_size_t, ctypes.POINTER(BenchmarkResult)]
     benchmark_dll.RunBenchmark.restype = None
 except OSError:
@@ -41,6 +46,8 @@ except OSError:
 integer_dll_path = os.path.join(os.path.dirname(__file__), "Integer_operations.dll")
 try:
     integer_dll = ctypes.CDLL(integer_dll_path)
+
+
     # Setup pentru Integer Operations DLL
     class IntegerBenchmarkResult(Structure):
         _fields_ = [
@@ -48,6 +55,8 @@ try:
             ("latency_ns", c_double),
             ("duration", c_double)
         ]
+
+
     integer_dll.runIntegerBenchmark.restype = IntegerBenchmarkResult
     integer_dll.runIntegerBenchmark.argtypes = []
 except OSError:
@@ -57,6 +66,8 @@ except OSError:
 fpu_dll_path = os.path.join(os.path.dirname(__file__), "Floating_point_operations.dll")
 try:
     fpu_dll = ctypes.CDLL(fpu_dll_path)
+
+
     # Setup pentru FPU DLL
     class FPUBenchmarkResult(Structure):
         _fields_ = [
@@ -64,11 +75,12 @@ try:
             ("latency_ns", c_double),
             ("duration", c_double)
         ]
+
+
     fpu_dll.runMandelbrotBenchmark.restype = FPUBenchmarkResult
     fpu_dll.runMandelbrotBenchmark.argtypes = []
 except OSError:
     print("Error loading Floating_point_operations.dll")
-
 
 # ==========================================
 # 2. UI SETUP
@@ -80,7 +92,7 @@ ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
 app.title("PC Benchmark App")
-app.geometry("1000x650")
+app.geometry("1000x750")
 
 icon_path = "logo.ico"
 try:
@@ -92,23 +104,21 @@ except Exception as e:
 text_font = ctk.CTkFont(family="Consolas", size=14)
 
 # ==========================================
-#  MAIN MENU FRAME (OPTIMIZAT: CENTRAT PERFECT)
+#  MAIN MENU FRAME (STRUCTURA CENTRATA)
 # ==========================================
 main_frame = ctk.CTkFrame(app)
 main_frame.pack(fill="both", expand=True)
 
-# Definim culorile
+# Definim culorile pentru meniul principal
 MAIN_BTN_COLOR = "#2196F3"
 MAIN_BTN_HOVER = "#1976D2"
 
 # --- CONTAINER PRINCIPAL PENTRU CENTRARE ---
-# Acesta va sta exact in mijlocul ecranului (vertical si orizontal)
-# si va tine cele doua coloane aproape una de alta.
+# Acesta va tine cele doua coloane aproape una de alta, centrate pe ecran
 menu_container = ctk.CTkFrame(main_frame, fg_color="transparent")
-menu_container.place(relx=0.5, rely=0.5, anchor="center")
+menu_container.place(relx=0.5, rely=0.45, anchor="center")
 
 # --- COLOANA STANGA (Hardware) ---
-# padx redus pentru a le tine aproape
 left_frame = ctk.CTkFrame(menu_container, fg_color="transparent")
 left_frame.pack(side="left", padx=50, pady=20, anchor="n")
 
@@ -118,6 +128,7 @@ btn_cpu = ctk.CTkButton(left_frame, text="CPU Info", width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_cpu.pack(pady=10)
 
+# Aici am pastrat textul original "Cache Memory Info"
 btn_cache = ctk.CTkButton(left_frame, text="Cache Memory Info", width=250, height=45,
                           fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_cache.pack(pady=10)
@@ -130,11 +141,9 @@ btn_ram = ctk.CTkButton(left_frame, text="RAM Info", width=250, height=45,
                         fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_ram.pack(pady=10)
 
-
 # --- COLOANA DREAPTA (Benchmarks) ---
-# padx redus pentru a le tine aproape
 right_frame = ctk.CTkFrame(menu_container, fg_color="transparent")
-right_frame.pack(side="left", padx=50, pady=20, anchor="n")
+right_frame.pack(side="right", padx=50, pady=20, anchor="n")
 
 ctk.CTkLabel(right_frame, text="Performance Benchmarks", font=("Arial", 20, "bold")).pack(pady=(0, 20))
 
@@ -148,11 +157,25 @@ btn_integer = ctk.CTkButton(right_frame, text="Test Integer Operations",
                             fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_integer.pack(pady=10)
 
+# Aici am pastrat textul original "Test Floating Point Operations"
 btn_fpu = ctk.CTkButton(right_frame, text="Test Floating Point Operations",
-                            width=250, height=45,
-                            fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
+                        width=250, height=45,
+                        fg_color=MAIN_BTN_COLOR, hover_color=MAIN_BTN_HOVER)
 btn_fpu.pack(pady=10)
 
+# --- FOOTER FRAME (BUTON RUN ALL) ---
+# Adaugat jos, separat de coloane
+footer_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+footer_frame.pack(side="bottom", pady=40)
+
+btn_run_all = ctk.CTkButton(footer_frame, text="RUN ALL PERFORMANCE TESTS & SAVE REPORT",
+                            width=400, height=50,
+                            font=("Arial", 14, "bold"),
+                            fg_color="#D32F2F", hover_color="#B71C1C")
+btn_run_all.pack()
+
+status_label = ctk.CTkLabel(footer_frame, text="", font=("Arial", 12), text_color="white")
+status_label.pack(pady=5)
 
 # ==========================================
 # RESTUL INTERFETEI (NESCHIMBAT)
@@ -300,34 +323,34 @@ btn_back_integer.pack(pady=10)
 fpu_frame = ctk.CTkFrame(app)
 
 fpu_title = ctk.CTkLabel(fpu_frame,
-                             text="Floating Point Operations Benchmark",
-                             font=ctk.CTkFont(family="Arial", size=20, weight="bold"))
+                         text="Floating Point Operations Benchmark",
+                         font=ctk.CTkFont(family="Arial", size=20, weight="bold"))
 fpu_title.pack(pady=20)
 
 fpu_warning_label = ctk.CTkLabel(fpu_frame,
-                                     text="WARNING: Close all other applications and processes during testing!",
-                                     font=ctk.CTkFont(family="Arial", size=13),
-                                     text_color="#FF6B6B")
+                                 text="WARNING: Close all other applications and processes during testing!",
+                                 font=ctk.CTkFont(family="Arial", size=13),
+                                 text_color="#FF6B6B")
 fpu_warning_label.pack(pady=10)
 
 fpu_duration_label = ctk.CTkLabel(fpu_frame,
-                                      text="NOTE: Test may take several minutes to complete.",
-                                      font=ctk.CTkFont(family="Arial", size=12),
-                                      text_color="#FFA500")
+                                  text="NOTE: Test may take several minutes to complete.",
+                                  font=ctk.CTkFont(family="Arial", size=12),
+                                  text_color="#FFA500")
 fpu_duration_label.pack(pady=5)
 
 fpu_info_label = ctk.CTkLabel(fpu_frame,
-                                  text="This benchmark measures the speed of floating point operations using\n"
-                                       "Mandelbrot fractal calculations",
-                                  font=ctk.CTkFont(family="Arial", size=12))
+                              text="This benchmark measures the speed of floating point operations using\n"
+                                   "Mandelbrot fractal calculations",
+                              font=ctk.CTkFont(family="Arial", size=12))
 fpu_info_label.pack(pady=10)
 
 btn_run_fpu = ctk.CTkButton(fpu_frame,
-                                text="START TEST",
-                                width=200, height=50,
-                                font=ctk.CTkFont(family="Arial", size=16, weight="bold"),
-                                fg_color="#4CAF50",  # Verde
-                                hover_color="#45a049")
+                            text="START TEST",
+                            width=200, height=50,
+                            font=ctk.CTkFont(family="Arial", size=16, weight="bold"),
+                            fg_color="#4CAF50",  # Verde
+                            hover_color="#45a049")
 btn_run_fpu.pack(pady=20)
 
 fpu_progress_bar = ctk.CTkProgressBar(fpu_frame, width=500, mode="indeterminate")
@@ -335,24 +358,24 @@ fpu_progress_bar.pack(pady=10)
 fpu_progress_bar.set(0)
 
 fpu_results_label = ctk.CTkLabel(fpu_frame,
-                                     text="Results:",
-                                     font=ctk.CTkFont(family="Arial", size=13, weight="bold"))
+                                 text="Results:",
+                                 font=ctk.CTkFont(family="Arial", size=13, weight="bold"))
 fpu_results_label.pack(pady=5)
 
 fpu_text = ctk.CTkTextbox(fpu_frame, width=880, height=300,
-                              font=ctk.CTkFont(family="Consolas", size=14))
+                          font=ctk.CTkFont(family="Consolas", size=14))
 fpu_text.pack(padx=10, pady=10)
 fpu_text.configure(state="disabled")
 
 btn_back_fpu = ctk.CTkButton(fpu_frame, text="Back to Menu",
-                                 width=150, height=35)
+                             width=150, height=35)
 btn_back_fpu.pack(pady=10)
-
 
 # ========== GLOBAL STATE ==========
 is_running = False
 is_integer_running = False
-is_fpu_running = False # (NOU - FPU)
+is_fpu_running = False
+is_full_report_running = False  # (NOU) State pentru raport complet
 
 
 # ========== FUNCTIONS ==========
@@ -412,6 +435,7 @@ def go_back_from_integer():
         integer_frame.pack_forget()
         main_frame.pack(fill="both", expand=True)
 
+
 # (NOU - FPU) Functii UI FPU
 def show_fpu():
     main_frame.pack_forget()
@@ -422,6 +446,7 @@ def show_fpu():
     fpu_text.insert("0.0", "Ready to run Floating Point Operations Benchmark.\n")
     fpu_text.insert("end", "Click 'START TEST' to begin...\n")
     fpu_text.configure(state="disabled")
+
 
 def go_back_from_fpu():
     global is_fpu_running
@@ -449,6 +474,7 @@ def log_integer(message):
 
     app.after(0, _log)
 
+
 # (NOU - FPU) Functie log FPU
 def log_fpu(message):
     def _log():
@@ -470,6 +496,7 @@ def clear_integer_log():
     integer_text.configure(state="normal")
     integer_text.delete("0.0", "end")
     integer_text.configure(state="disabled")
+
 
 # (NOU - FPU) Clear Log
 def clear_fpu_log():
@@ -550,6 +577,7 @@ def run_integer_thread():
         is_integer_running = False
         app.after(0, finish_integer)
 
+
 # (NOU - FPU) Thread FPU
 def run_fpu_thread():
     global is_fpu_running
@@ -561,7 +589,7 @@ def run_fpu_thread():
         result = fpu_dll.runMandelbrotBenchmark()
 
         log_fpu("-" * 50 + "\n")
-        log_fpu("                 RESULTS (FPU)\n")
+        log_fpu("                 RESULTS\n")
         log_fpu("-" * 50 + "\n\n")
 
         log_fpu(f"  Score:        {result.gflops:.3f} GFLOPS\n")
@@ -597,6 +625,7 @@ def finish_integer():
     # RESETEAZA CULOAREA LA VERDE (#4CAF50) DUPA TERMINARE
     btn_run_integer.configure(state="normal", text="START TEST", fg_color="#4CAF50")
     btn_back_integer.configure(state="normal")
+
 
 # (NOU - FPU) Finish FPU
 def finish_fpu():
@@ -651,6 +680,7 @@ def start_integer():
     thread.daemon = True
     thread.start()
 
+
 # (NOU - FPU) Start FPU
 def start_fpu():
     global is_fpu_running
@@ -671,7 +701,113 @@ def start_fpu():
     thread.start()
 
 
-# ========== BUTTON COMMANDS ==========
+# ==========================================
+#  4. FULL DIAGNOSTIC LOGIC (BUTON NOU)
+# ==========================================
+
+def run_full_report_thread():
+    global is_full_report_running
+    report = []
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def update_status(msg):
+        app.after(0, lambda: status_label.configure(text=msg))
+
+    try:
+        # 1. Info Hardware
+        update_status("Gathering Hardware Information...")
+        report.append("=" * 60)
+        report.append(f"PC BENCHMARK REPORT - {timestamp}")
+        report.append("=" * 60 + "\n")
+
+        if dll:
+            report.append("--- 1. CPU INFORMATION ---")
+            report.append(dll.getCPUInfo().decode())
+            report.append("\n--- 2. CACHE MEMORY ---")
+            report.append(dll.getCacheInfo().decode())
+            report.append("\n--- 3. MEMORY PAGING ---")
+            report.append(dll.getMemPagingInfo().decode())
+            report.append("\n--- 4. RAM INFORMATION ---")
+            report.append(dll.getRAMInfo().decode())
+            report.append("-" * 60 + "\n")
+
+        # 2. Integer Tests
+        update_status("Running Integer Operations Benchmark...")
+        report.append("--- 5. INTEGER OPERATIONS BENCHMARK ---")
+        int_res = integer_dll.runIntegerBenchmark()
+        report.append(f"Performance:  {int_res.gops:.3f} GOps")
+        report.append(f"Latency:      {int_res.latency_ns:.4f} ns/op")
+        report.append(f"Duration:     {int_res.duration:.2f} s")
+        report.append("")
+
+        time.sleep(3)
+
+        # 3. FPU Tests
+        update_status("Running Floating Point Operations Benchmark...")
+        report.append("--- 6. FLOATING POINT BENCHMARK ---")
+        fpu_res = fpu_dll.runMandelbrotBenchmark()
+        report.append(f"Score:        {fpu_res.gflops:.3f} GFLOPS")
+        report.append(f"Latency:      {fpu_res.latency_ns:.4f} ns/op")
+        report.append(f"Duration:     {fpu_res.duration:.2f} s")
+        report.append("")
+
+        time.sleep(3)
+
+        # 4. Data Transfer (TOATE DIMENSIUNILE)
+        update_status("Running Data Transfer Tests...")
+        report.append("--- 7. DATA TRANSFER SPEED ---")
+
+        # Folosim lista completa din configurare
+        all_sizes_to_test = sizes_config
+
+        for size_mb, label in all_sizes_to_test:
+            update_status(f"Testing Memory Block Transfer: {label}...")
+            report.append(f"[ Block Size: {label} ]")
+            res = BenchmarkResult()
+            benchmark_dll.RunBenchmark(int(size_mb * 1024 * 1024), ctypes.byref(res))
+            report.append(f"  Sequential Access: {res.sequential:.2f} MB/s")
+            for i in range(res.stride_count):
+                stride_val = res.strides[i]
+                speed_val = res.strided_results[i]
+                report.append(f"  Strided Access (Stride {stride_val}): {speed_val:.2f} MB/s")
+            report.append(f"  Random Access:   {res.random:.2f} MB/s")
+            report.append("")
+
+        report.append("=" * 60)
+        report.append("END OF REPORT")
+
+        # Salvare
+        with open("benchmark_report.txt", "w") as f:
+            f.write("\n".join(report))
+
+        update_status("Done! Results saved to benchmark_report.txt")
+
+    except Exception as e:
+        update_status(f"Error: {str(e)}")
+    finally:
+        is_full_report_running = False
+        app.after(0, lambda: btn_run_all.configure(state="normal", text="RUN ALL PERFORMANCE TESTS & SAVE REPORT",
+                                                   fg_color="#D32F2F"))
+
+
+def start_full_report():
+    global is_full_report_running
+    if is_full_report_running: return
+    if is_running or is_integer_running or is_fpu_running:
+        status_label.configure(text="Wait for other tests!", text_color="red")
+        return
+
+    is_full_report_running = True
+    btn_run_all.configure(state="disabled", text="RUNNING TESTS...", fg_color="gray")
+    status_label.configure(text="Starting...", text_color="white")
+
+    thread = threading.Thread(target=run_full_report_thread, daemon=True)
+    thread.start()
+
+
+# ==========================================
+# 5. BUTTON COMMANDS
+# ==========================================
 
 btn_cpu.configure(command=lambda: show_info(dll.getCPUInfo, "CPU Information"))
 btn_cache.configure(command=lambda: show_info(dll.getCacheInfo, "Cache Memory Information"))
@@ -679,15 +815,17 @@ btn_paging.configure(command=lambda: show_info(dll.getMemPagingInfo, "Memory Pag
 btn_ram.configure(command=lambda: show_info(dll.getRAMInfo, "RAM Information"))
 btn_benchmark.configure(command=show_benchmark)
 btn_integer.configure(command=show_integer)
-btn_fpu.configure(command=show_fpu) # (NOU - FPU) Command Link
+btn_fpu.configure(command=show_fpu)  # (NOU - FPU) Command Link
 
 btn_back_info.configure(command=go_back_from_info)
 btn_back_benchmark.configure(command=go_back_from_benchmark)
 btn_back_integer.configure(command=go_back_from_integer)
-btn_back_fpu.configure(command=go_back_from_fpu) # (NOU - FPU) Back Link
+btn_back_fpu.configure(command=go_back_from_fpu)  # (NOU - FPU) Back Link
 
 btn_run_benchmark.configure(command=start_benchmark)
 btn_run_integer.configure(command=start_integer)
-btn_run_fpu.configure(command=start_fpu) # (NOU - FPU) Start Link
+btn_run_fpu.configure(command=start_fpu)  # (NOU - FPU) Start Link
+
+btn_run_all.configure(command=start_full_report)  # (NOU) Full report link
 
 app.mainloop()
