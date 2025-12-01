@@ -132,16 +132,15 @@ public:
     }
 };
 
-// Structure for benchmark results
+
 struct BenchmarkResult {
-    double gops;        // Giga Operations per Second
-    double latency_ns;  // nanoseconds per operation
-    double duration;    // benchmark duration in seconds
+    double gops;        
+    double latency_ns; 
+    double duration;
 };
 
-// Exported functions for DLL
+
 extern "C" {
-    // Returns full benchmark results
     __declspec(dllexport) BenchmarkResult runIntegerBenchmark() {
         IntegerOperationsBenchmark benchmark;
 
@@ -152,7 +151,7 @@ extern "C" {
 
         BenchmarkResult result;
         result.gops = median_gops;
-        result.latency_ns = 1.0 / median_gops; // nanoseconds per operation
+        result.latency_ns = 1.0 / median_gops;
         result.duration = duration;
 
         return result;

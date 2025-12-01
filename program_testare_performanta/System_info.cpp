@@ -12,13 +12,11 @@ void get_CPU_Frequency()
 {
 	HRESULT hres;
 
-	// Initialize COM
 	hres = CoInitializeEx(0, COINIT_MULTITHREADED);
 	if (FAILED(hres)) {
 		return;
 	}
 
-	// Initialize security
 	hres = CoInitializeSecurity(NULL, -1, NULL, NULL,
 		RPC_C_AUTHN_LEVEL_DEFAULT,
 		RPC_C_IMP_LEVEL_IMPERSONATE,
@@ -29,7 +27,6 @@ void get_CPU_Frequency()
 		return; 
 	}
 
-	// Create WMI locator
 	IWbemLocator* pLoc = nullptr;
 	hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
 		IID_IWbemLocator, (LPVOID*)&pLoc);
@@ -38,7 +35,6 @@ void get_CPU_Frequency()
 		return; 
 	}
 
-	// Connect to WMI namespace
 	IWbemServices* pSvc = nullptr;
 	hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc);
 	if (FAILED(hres)) { 
@@ -47,7 +43,6 @@ void get_CPU_Frequency()
 		return; 
 	}
 
-	// Set security levels
 	HRESULT hr = CoSetProxyBlanket(pSvc,
 		RPC_C_AUTHN_WINNT,
 		RPC_C_AUTHZ_NONE,
@@ -180,17 +175,12 @@ void get_CPU_info()
 	cout << "Number of threads per core: " << threadsPerCore << "\n";
 
 	int IA_extension_info[4];
-
-	// EAX = 1 - standard feature flags
 	__cpuid(IA_extension_info, 1);
 	vector<string> extensions;
 
-	// EDX bits (legacy)
 	if (IA_extension_info[3] & (1 << 23)) extensions.push_back("MMX");
 	if (IA_extension_info[3] & (1 << 25)) extensions.push_back("SSE");
 	if (IA_extension_info[3] & (1 << 26)) extensions.push_back("SSE2");
-
-	// ECX bits (modern)
 	if (IA_extension_info[2] & (1 << 0))  extensions.push_back("SSE3");
 	if (IA_extension_info[2] & (1 << 9))  extensions.push_back("SSSE3");
 	if (IA_extension_info[2] & (1 << 12)) extensions.push_back("FMA3");
@@ -286,35 +276,28 @@ string ws2s(const wstring& wstr) {
 
 void get_RAM_Info() {
 	HRESULT hres;
-	// Flag pentru a sti daca noi am initializat COM si daca avem dreptul sa il inchidem
 	bool bCleanupCOM = false;
 
-	// 1. Initialize COM
 	hres = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 	if (SUCCEEDED(hres)) {
-		bCleanupCOM = true; // Noi l-am pornit, noi il oprim
+		bCleanupCOM = true; 
 	}
 	else if (hres == RPC_E_CHANGED_MODE) {
-		// E deja pornit (probabil de alta functie), continuam dar NU dam Uninitialize la final
 		bCleanupCOM = false;
 	}
 	else {
-		// Eroare critica
 		return;
 	}
 
-	// 2. Initialize Security
 	hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT,
 		RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
 
-	// MODIFICARE CRITICA AICI: Ignoram eroarea RPC_E_TOO_LATE (inseamna ca securitatea e deja setata)
 	if (FAILED(hres) && hres != RPC_E_TOO_LATE) {
 		if (bCleanupCOM) CoUninitialize();
 		return;
 	}
 
-	// 3. Create WMI Locator
 	IWbemLocator* pLoc = nullptr;
 	hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
 		IID_IWbemLocator, (LPVOID*)&pLoc);
@@ -324,7 +307,6 @@ void get_RAM_Info() {
 		return;
 	}
 
-	// 4. Connect to WMI
 	IWbemServices* pSvc = nullptr;
 	hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc);
 
@@ -334,7 +316,6 @@ void get_RAM_Info() {
 		return;
 	}
 
-	// 5. Set Security Levels
 	hres = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL,
 		RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE);
 
@@ -345,7 +326,6 @@ void get_RAM_Info() {
 		return;
 	}
 
-	// --- QUERY PENTRU MODULE ---
 	IEnumWbemClassObject* pEnumerator = nullptr;
 	hres = pSvc->ExecQuery(bstr_t("WQL"),
 		bstr_t("SELECT Capacity, ConfiguredClockSpeed, Speed, Manufacturer, "
@@ -472,7 +452,6 @@ void get_RAM_Info() {
 	}
 	pEnumerator->Release();
 
-	// --- QUERY PENTRU SLOTURI ---
 	pEnumerator = nullptr;
 	int totalSlots = 0;
 	hres = pSvc->ExecQuery(bstr_t("WQL"),
@@ -480,7 +459,6 @@ void get_RAM_Info() {
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL, &pEnumerator);
 
 	if (SUCCEEDED(hres) && pEnumerator) {
-		// Aici trebuie sa verificam next si sa alocam obiectul
 		if (pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn) == S_OK) {
 			VARIANT vt;
 			VariantInit(&vt);
@@ -512,7 +490,6 @@ void get_RAM_Info() {
 	pSvc->Release();
 	pLoc->Release();
 
-	// Inchidem COM doar daca noi l-am deschis
 	if (bCleanupCOM) {
 		CoUninitialize();
 	}
