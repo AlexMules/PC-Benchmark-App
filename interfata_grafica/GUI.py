@@ -62,7 +62,6 @@ try:
             ("duration", c_double)
         ]
 
-
     fpu_dll.runMandelbrotBenchmark.restype = FPUBenchmarkResult
     fpu_dll.runMandelbrotBenchmark.argtypes = []
 except OSError:
@@ -337,6 +336,7 @@ is_running = False
 is_integer_running = False
 is_fpu_running = False
 is_full_report_running = False
+
 
 def toggle_menu_buttons(state):
     btn_cpu.configure(state=state)
@@ -781,4 +781,8 @@ btn_run_integer.configure(command=start_integer)
 btn_run_fpu.configure(command=start_fpu)
 btn_run_all.configure(command=start_full_report)
 
-app.mainloop()
+def main():
+    app.mainloop()
+
+if __name__ == "__main__":
+    main()
