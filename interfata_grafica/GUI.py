@@ -379,6 +379,16 @@ is_full_report_running = False  # (NOU) State pentru raport complet
 
 
 # ========== FUNCTIONS ==========
+def toggle_menu_buttons(state):
+    """Activeaza sau dezactiveaza toate butoanele din meniu"""
+    btn_cpu.configure(state=state)
+    btn_cache.configure(state=state)
+    btn_paging.configure(state=state)
+    btn_ram.configure(state=state)
+    btn_benchmark.configure(state=state)
+    btn_integer.configure(state=state)
+    btn_fpu.configure(state=state)
+
 
 def show_info(dll_func, label_text):
     main_frame.pack_forget()
@@ -788,6 +798,7 @@ def run_full_report_thread():
         is_full_report_running = False
         app.after(0, lambda: btn_run_all.configure(state="normal", text="RUN ALL PERFORMANCE TESTS & SAVE REPORT",
                                                    fg_color="#D32F2F"))
+        app.after(0, lambda: toggle_menu_buttons("normal"))
 
 
 def start_full_report():
@@ -800,6 +811,8 @@ def start_full_report():
     is_full_report_running = True
     btn_run_all.configure(state="disabled", text="RUNNING TESTS...", fg_color="gray")
     status_label.configure(text="Starting...", text_color="white")
+
+    toggle_menu_buttons("disabled")
 
     thread = threading.Thread(target=run_full_report_thread, daemon=True)
     thread.start()
