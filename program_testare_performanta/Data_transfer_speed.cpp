@@ -1,7 +1,4 @@
-// Compile (MSVC): cl /O2 /EHsc Data_transfer_speed.cpp
-
-#define BENCHMARKDLL_EXPORTS
-#include "Data_transfer_speed.hpp"
+// Compile (MSVC): cl /O2 /EHsc /LD Data_transfer_speed.cpp
 
 #include <iostream>
 #include <vector>
@@ -15,6 +12,16 @@
 #include <intrin.h>
 
 using namespace std;
+
+extern "C" {
+    struct BenchmarkResult {
+        double sequential;
+        int stride_count;
+        int strides[3];
+        double strided_results[3];
+        double random;
+    };
+}
 
 // previne optimizarile efectuate de compilator
 template<typename T>
@@ -286,7 +293,7 @@ public:
 };
 
 extern "C" {
-    BENCHMARK void RunBenchmark(size_t blockSize, BenchmarkResult* result) {
+    __declspec(dllexport) void RunBenchmark(size_t blockSize, BenchmarkResult* result) {
         if (!result) {
             return;
         }
