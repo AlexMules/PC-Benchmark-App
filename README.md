@@ -47,8 +47,25 @@ Key features of the interface include:
 The app is designed to enable the objective evaluation and comparison of performance across different hardware configurations. By executing the same suite of benchmarks on various systems, users can identify specific hardware limitations and gain a clear understanding of how different components impact overall system speed.<br><br>
 
 ## 📥 Installation and Usage Guide
+The app is available as a standalone executable file that operates independently, requiring no Python installation or additional components.
+⚠️ **`WARNING`**! The app is designed for Windows operating systems, as it relies on specific system calls and native libraries (WMI, Win32 API).<br><br>
+To run the application:
+1. Navigate to the `Releases` section of this repository.
+2. Download the latest version of the application (the `.exe` file).
+3. Run the `PC-Benchmark-App.exe` file.
+4. Upon the first launch, Windows Defender or your antivirus software may display a security warning because the application is not digitally signed. Confirm execution by selecting the "Run anyway" option.
+5. The graphical interface will open, allowing the user to select the desired hardware information or initiate performance tests.<br><br>
 
+**Note**: For optimal benchmark results, the following is recommended:
+* Close other applications during testing.
+* Connect the laptop to a power source (to avoid thermal throttling).
+* Run the application with the system in an idle state (without other intensive background processes).<br><br>
 
+## 🚀 Future Development
+* **Intel Cache Support**: Implement support for Intel processors in the "Cache Memory Info" module by using the CPUID function 0x04. The current implementation relies on the extended cache enumeration function (0x8000001D), which is specific to AMD Ryzen architectures.
+* **Automated Hardware Detection**: Develop an automated detection mechanism for the CPU manufacturer. This would allow the application to dynamically switch between different data-gathering methods (e.g., Intel vs. AMD) without requiring manual configuration.
+* **Enhanced Data Visualization**: Integrate data visualization tools, such as charts and graphs, within the GUI. This would provide a more intuitive comparison of benchmark results when analyzing performance across different hardware runs or configurations.
+* **Expanded Benchmark Suite**: Extend the current benchmarking capabilities to include stress testing for other components, such as the GPU.
 
 
 
