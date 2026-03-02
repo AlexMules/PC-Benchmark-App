@@ -1,0 +1,187 @@
+============================================================
+PC BENCHMARK REPORT - 2025-12-02 09:53:39
+============================================================
+
+--- 1. CPU INFORMATION ---
+Vendor signature: AuthenticAMD
+CPU: AMD Ryzen 9 7940HS w/ Radeon 780M Graphics     
+Frequency: 4.0 GHz
+Number of cores: 8
+Number of threads: 16
+Number of threads per core: 2
+
+IA Extensions supported:
+- MMX
+- SSE
+- SSE2
+- SSE3
+- SSSE3
+- FMA3
+- SSE4.1
+- SSE4.2
+- AES
+- AVX
+
+Processor type: 0
+Family ID: 25
+Model ID: 116
+Stepping ID: 1
+
+
+--- 2. CACHE MEMORY ---
+Level: L1 (Data Cache)
+Size: 32 KB (0.03125 MB)
+Line size: 64 bytes
+Partitions: 1
+Ways of associativity: 8
+Sets: 64
+Fully associative: No
+Self-initializing: Yes
+Max no. of threads sharing cache: 2
+Max no. of cores in package: 1
+Complex indexing: No
+Includes lower levels: No
+
+
+Level: L1 (Instruction Cache)
+Size: 32 KB (0.03125 MB)
+Line size: 64 bytes
+Partitions: 1
+Ways of associativity: 8
+Sets: 64
+Fully associative: No
+Self-initializing: Yes
+Max no. of threads sharing cache: 2
+Max no. of cores in package: 1
+Complex indexing: No
+Includes lower levels: No
+
+
+Level: L2 (Unified Cache)
+Size: 1024 KB (1 MB)
+Line size: 64 bytes
+Partitions: 1
+Ways of associativity: 8
+Sets: 2048
+Fully associative: No
+Self-initializing: Yes
+Max no. of threads sharing cache: 2
+Max no. of cores in package: 1
+Complex indexing: No
+Includes lower levels: Yes
+
+
+Level: L3 (Unified Cache)
+Size: 16384 KB (16 MB)
+Line size: 64 bytes
+Partitions: 1
+Ways of associativity: 16
+Sets: 16384
+Fully associative: No
+Self-initializing: Yes
+Max no. of threads sharing cache: 16
+Max no. of cores in package: 1
+Complex indexing: No
+Includes lower levels: No
+
+
+
+
+--- 3. MEMORY PAGING ---
+Page Size: 4 KB
+Allocation Granularity: 64 KB
+Minimum Application Virtual Address: 0x0000000000010000
+Maximum Application Virtual Address: 0x00007FFFFFFEFFFF
+
+
+--- 4. RAM INFORMATION ---
+===== Module 0 =====
+Manufacturer: Hynix
+Capacity: 8 GB
+Data Transfer Rate: 4800 MT/s
+Device Locator: DIMM 0
+Bank Label: P0 CHANNEL A
+Form Factor: SODIMM
+Configured Voltage: 1.1 V
+Serial Number: C050D4F9
+Part Number: HMCG66MEBSA095N     
+Type: DDR5
+Data width: 64 bits
+Total width: 64 bits
+ECC: No
+
+
+===== Module 1 =====
+Manufacturer: Hynix
+Capacity: 8 GB
+Data Transfer Rate: 4800 MT/s
+Device Locator: DIMM 0
+Bank Label: P0 CHANNEL B
+Form Factor: SODIMM
+Configured Voltage: 1.1 V
+Serial Number: C050D4F8
+Part Number: HMCG66MEBSA095N     
+Type: DDR5
+Data width: 64 bits
+Total width: 64 bits
+ECC: No
+
+
+RAM Slots: Total = 2, Used = 2, Free = 0
+Total RAM Installed: 16 GB
+Channel Configuration: Dual-channel
+
+------------------------------------------------------------
+
+--- 5. INTEGER OPERATIONS BENCHMARK ---
+Performance:  13.231 GOps
+Latency:      0.0756 ns/op
+Duration:     41.61 s
+
+--- 6. FLOATING POINT OPERATIONS BENCHMARK ---
+Score:        4.069 GFLOPS
+Latency:      0.2457 ns/op
+Duration:     76.84 s
+
+--- 7. DATA TRANSFER SPEED ---
+[ Block Size: 64 KB ]
+  Sequential Access: 19531.25 MB/s
+  Strided Access (Stride 4): 5040.32 MB/s
+  Strided Access (Stride 8): 2790.18 MB/s
+  Strided Access (Stride 16): 1562.50 MB/s
+  Random Access:   2649.10 MB/s
+
+[ Block Size: 512 KB ]
+  Sequential Access: 32258.06 MB/s
+  Strided Access (Stride 4): 6281.41 MB/s
+  Strided Access (Stride 8): 3742.51 MB/s
+  Strided Access (Stride 16): 1882.53 MB/s
+  Random Access:   691.07 MB/s
+
+[ Block Size: 16 MB ]
+  Sequential Access: 26564.83 MB/s
+  Strided Access (Stride 4): 3899.02 MB/s
+  Strided Access (Stride 8): 1930.50 MB/s
+  Strided Access (Stride 16): 982.51 MB/s
+  Random Access:   281.53 MB/s
+
+[ Block Size: 128 MB ]
+  Sequential Access: 23525.09 MB/s
+  Strided Access (Stride 16): 873.69 MB/s
+  Strided Access (Stride 64): 329.77 MB/s
+  Strided Access (Stride 256): 202.46 MB/s
+  Random Access:   287.57 MB/s
+
+[ Block Size: 512 MB ]
+  Sequential Access: 21544.83 MB/s
+  Strided Access (Stride 16): 761.62 MB/s
+  Strided Access (Stride 64): 322.47 MB/s
+  Strided Access (Stride 256): 193.87 MB/s
+  Random Access:   258.42 MB/s
+
+[ Block Size: 1 GB ]
+  Sequential Access: 25374.55 MB/s
+  Random Access:   190.40 MB/s
+
+============================================================
+END OF REPORT
