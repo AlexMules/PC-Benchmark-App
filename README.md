@@ -15,6 +15,7 @@ This benchmarking application features a modern Python graphical interface (usin
 * **`Data_transfer_speed.cpp`** - The module provides benchmarks to evaluate data transfer speeds by performing sequential, strided, and random memory access tests. It uses dynamic allocation, cache-flushing techniques to ensure accuracy, and a `PrecisionTimer` class for high-resolution measurement.
 * **`Integer_operations.cpp`** – Designed to evaluate the performance of integer arithmetic and logical operations, this module applies a sequence of 13 distinct operations to randomized data buffers. It employs synchronization barriers and "warm-up" runs to ensure stable, repeatable results measured in Giga Operations per Second (**GOps**).
 * **`Floating_point_operations.cpp`** – This module assesses the processor's floating-point performance (FPU) by computing the Mandelbrot fractal. It executes complex arithmetic operations on `double` precision numbers and reports performance in Giga Floating Point Operations per Second (**GFLOPS**).<br>
+
 To ensure efficient integration between the C++ modules and the GUI, the source code was compiled into **`Dynamic-Link Libraries`** (DLLs).
 
 
